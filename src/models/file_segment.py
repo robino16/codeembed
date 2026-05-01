@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
-SegmentType = Literal["function", "method", "class", "section"]
+SegmentType = Literal["function", "class", "section"]
 
 
 @dataclass
