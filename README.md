@@ -1,1 +1,1 @@
-# code-embedder
+# Codebase Embedder
