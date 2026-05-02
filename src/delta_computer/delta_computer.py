@@ -14,10 +14,9 @@ class DeltaComputer:
 
     def compute_deltas(self) -> Tuple[Set[str], Set[str]]:
         """
-        Computing deltas is fucking easy.
+        Computing deltas is really easy.
 
-        Here we compare with actual values stored in the vector database directly.
-        We iter each chunk, which is not the best in terms of performance.
+        We iter each chunk in the vector database directly, which is not the best in terms of performance.
         """
 
         file_paths_to_delete = set()
