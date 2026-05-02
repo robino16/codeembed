@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Iterator, List
 
 from src.doc_provider.base import DocProviderBase
@@ -36,7 +36,7 @@ class LocalDocProvider(DocProviderBase):
 
                 try:
                     modified_ts = os.path.getmtime(file_path)
-                    modified_at = datetime.fromtimestamp(modified_ts)
+                    modified_at = datetime.fromtimestamp(modified_ts, tz=timezone.utc)
                 except OSError:
                     # Skip files we can't stat
                     continue

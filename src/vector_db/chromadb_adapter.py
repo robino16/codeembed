@@ -13,7 +13,7 @@ class ChromaDbAdapter(VectorDbBase):
     def __init__(self, collection_name: str) -> None:
         # TODO: Support adding EmbeddingServiceBase and replacing ChromaDB default embedder.
         self._client = chromadb.PersistentClient(path="./chroma_db")
-        self._collection = self._client.create_collection(collection_name)
+        self._collection = self._client.get_or_create_collection(collection_name)
 
     def add_chunks(self, chunks: List[Chunk]) -> None:
         documents: List[str] = [chunk.content for chunk in chunks]

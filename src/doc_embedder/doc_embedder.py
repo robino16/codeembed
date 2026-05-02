@@ -30,6 +30,12 @@ def _segment_to_chunk(
 
     # If the file was updated within e.g., last 10 seconds, we should have a debounce and wait to embed it again.
 
+    logger.info(
+        "Analyzing segment %s in file %s...", segment.content.split("\n")[0], file_path
+    )
+
+    input("Press enter to confirm (ctrl+c to abort)...")
+
     messages = [
         {"role": "system", "content": "You are an expert at describing code."},
         {
@@ -52,17 +58,21 @@ If it is a text paragraph, explain what it covers.
 Focus on the key aspects of the text or code.
 Write a succint summary.
 Return the summary only without any additional comments.
+Start with, e.g.,
+This {segment.type} is ...
 """,
         },
     ]
 
     response = llm_service.generate_response(messages, llm_model)
 
+    print(f"LLM summary:\n{response}\n")
+
     return response
 
 
 class DocEmbedder:
-    def ___init__(
+    def __init__(
         self,
         doc_provider: DocProviderBase,
         vector_db: VectorDbBase,
@@ -75,6 +85,9 @@ class DocEmbedder:
         self._llm_model = llm_model
 
     def embed_codebase(self) -> None:
+
+        logger.info("Computing deltas...")
+
         chunks_ids_to_remove, files_to_update = DeltaComputer(
             self._doc_provider, self._vector_db
         ).compute_deltas()
@@ -84,9 +97,19 @@ class DocEmbedder:
         )
         logger.info(f"Detected {len(files_to_update)} files to reprocess.")
 
-        self._vector_db.delete_chunks(list(chunks_ids_to_remove))
+        if chunks_ids_to_remove:
+            logger.info(
+                f"Deleting {len(chunks_ids_to_remove)} chunks from vector database."
+            )
+            self._vector_db.delete_chunks(list(chunks_ids_to_remove))
+
+        logger.info(f"Processing {len(files_to_update)} files...")
+
+        num_processed = 0
+        num_skipped = 0
 
         for file in files_to_update:
+            logger.info(f"Processing file '{file}'...")
             ext = file.split(".")[-1]
             splitter = DocSplitterFactory.create(ext)
             if splitter is None:
@@ -95,6 +118,7 @@ class DocEmbedder:
                 logger.warning(
                     f"Cannot embed file at path '{file}'. No splitter implemented for this file extension."
                 )
+                num_skipped += 1
                 continue
             content = self._doc_provider.get_content(file)
             segments = splitter.split_file(content)
@@ -113,4 +137,12 @@ class DocEmbedder:
                         line_end=segment.line_end,
                     )
                 )
+            logger.info(f"Saving {len(chunks)} chunks to vector database.")
             self._vector_db.add_chunks(chunks)
+            num_processed += 1
+            logger.info(f"Successfully embedded file: '{file}'.")
+
+        if num_processed > 0:
+            logger.info(f"Successfully embedded {num_processed} files.")
+        if num_skipped > 0:
+            logger.warning(f"Skipped processing {num_skipped} files.")

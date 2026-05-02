@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from src.delta_computer.delta_computer import DeltaComputer
 from src.doc_provider.base import DocProviderBase
-from src.doc_provider.models import Document
+from src.doc_provider.models import DocumentMeta
 from src.vector_db.base import VectorDbBase
 from src.vector_db.models import Chunk
 
@@ -15,12 +15,15 @@ class FakeDocProvider(DocProviderBase):
     def iter(self):
         return iter(self._docs)
 
+    def get_content(self, file_path) -> str:
+        raise NotImplementedError()
+
 
 class FakeVectorDb(VectorDbBase):
     def __init__(self, chunks):
         self._chunks = chunks
 
-    def iter_chunks(self):
+    def iter_chunks(self, *args, **kwargs):
         return iter(self._chunks)
 
     def search(self, *args, **kwargs):
@@ -29,13 +32,16 @@ class FakeVectorDb(VectorDbBase):
     def add_chunks(self, *args, **kwargs):
         raise NotImplementedError()
 
+    def delete_chunks(self, *args, **kwargs):
+        raise NotImplementedError()
+
 
 def test_detects_new_document():
     now = datetime.now()
 
     doc_provider = FakeDocProvider(
         [
-            Document(file_path="file1.txt", content="", modified_at=now),
+            DocumentMeta(file_path="file1.txt", modified_at=now),
         ]
     )
 
@@ -54,7 +60,16 @@ def test_detects_deleted_document():
     doc_provider = FakeDocProvider([])
 
     vector_db = FakeVectorDb(
-        [Chunk(id=uuid4(), content="", file_path="file1.txt", modified_at=now)]
+        [
+            Chunk(
+                id=uuid4(),
+                content="",
+                file_path="file1.txt",
+                modified_at=now,
+                line_end=10,
+                line_start=4,
+            )
+        ]
     )
 
     dc = DeltaComputer(doc_provider, vector_db)
@@ -70,7 +85,7 @@ def test_detects_updated_document():
 
     doc_provider = FakeDocProvider(
         [
-            Document(file_path="file1.txt", content="", modified_at=now),
+            DocumentMeta(file_path="file1.txt", content="", modified_at=now),
         ]
     )
 
@@ -81,6 +96,8 @@ def test_detects_updated_document():
                 content="",
                 file_path="file1.txt",
                 modified_at=older,
+                line_start=1,
+                line_end=10,
             )
         ]
     )
