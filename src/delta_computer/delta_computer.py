@@ -20,6 +20,9 @@ class DeltaComputer:
         May not have best perfomance since we iterate each chunk stored in the vector database.
         """
 
+        # TODO: Note that we need to use checksums instead of modifed_at from file provider.
+        #       The reason is that editors may update modified date even without any changes.
+
         file_paths_to_update = set()
 
         file_path_to_chunk_ids: Dict[str, List[UUID]] = {}
