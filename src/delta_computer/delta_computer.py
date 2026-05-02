@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Dict, Set, Tuple
+from typing import Dict, List, Set, Tuple
+from uuid import UUID
 
 from src.doc_provider.base import DocProviderBase
 from src.vector_db.base import VectorDbBase
@@ -12,15 +13,17 @@ class DeltaComputer:
         self._doc_provider = doc_provider
         self._vector_db = vector_db
 
-    def compute_deltas(self) -> Tuple[Set[str], Set[str]]:
+    def compute_deltas(self) -> Tuple[Set[UUID], Set[str]]:
         """
-        Computing deltas is really easy.
+        Returns chunk IDs to delete and file paths to process.
 
-        We iter each chunk in the vector database directly, which is not the best in terms of performance.
+        May not have best perfomance since we iterate each chunk stored in the vector database.
         """
 
-        file_paths_to_delete = set()
         file_paths_to_update = set()
+
+        file_path_to_chunk_ids: Dict[str, List[UUID]] = {}
+        chunk_ids_to_delete: Set[UUID] = set()
 
         # Collect modified_at stored in our database.
         old: Dict[str, datetime] = {}
@@ -28,6 +31,10 @@ class DeltaComputer:
             old[chunk.file_path] = max(
                 old.get(chunk.file_path, chunk.modified_at), chunk.modified_at
             )
+
+            file_path_to_chunk_ids[chunk.file_path] = file_path_to_chunk_ids.get(
+                chunk.file_path, []
+            ) + [chunk.id]
 
         # Collect current modified_at in file system.
         current: Dict[str, datetime] = {}
@@ -39,9 +46,14 @@ class DeltaComputer:
             if file_path not in old or old[file_path] < modified_at:
                 file_paths_to_update.add(file_path)
 
+            # We delete all old chunks for any modified files.
+            for chunk_id in file_path_to_chunk_ids.get(file_path, []):
+                chunk_ids_to_delete.add(chunk_id)
+
         # Figure out which files have been removed.
         for file_path in old:
             if file_path not in current:
-                file_paths_to_delete.add(file_path)
+                for chunk_id in file_path_to_chunk_ids.get(file_path, []):
+                    chunk_ids_to_delete.add(chunk_id)
 
-        return file_paths_to_delete, file_paths_to_update
+        return chunk_ids_to_delete, file_paths_to_update

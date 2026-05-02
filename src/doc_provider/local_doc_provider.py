@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Iterator, List
 
 from src.doc_provider.base import DocProviderBase
-from src.doc_provider.models import Document
+from src.doc_provider.models import DocumentMeta
 
 
 class LocalDocProvider(DocProviderBase):
@@ -16,11 +16,7 @@ class LocalDocProvider(DocProviderBase):
         ]
         self._skip_keywords = skip_keywords
 
-    def iter(self) -> Iterator[Document]:
-        # NOTE: We could split this into two methods,
-        #       one for iter_metadata and one for download_document
-        #       currently doc provider filters documents
-        #       this is a OK for a simple app
+    def iter(self) -> Iterator[DocumentMeta]:
         for root, _, files in os.walk(self._base_path):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
@@ -39,21 +35,17 @@ class LocalDocProvider(DocProviderBase):
                     continue
 
                 try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        content = f.read()
-                except UnicodeDecodeError, OSError:
-                    # Skip non-text or unreadable files
-                    continue
-
-                try:
                     modified_ts = os.path.getmtime(file_path)
                     modified_at = datetime.fromtimestamp(modified_ts)
                 except OSError:
                     # Skip files we can't stat
                     continue
 
-                yield Document(
+                yield DocumentMeta(
                     file_path=file_path,
-                    content=content,
                     modified_at=modified_at,
                 )
+
+    def get_content(self, file_path: str) -> str:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Iterator, List
+from typing import Dict, Iterator, List, Optional
+from uuid import UUID
 
 from src.vector_db.models import Chunk
 
@@ -14,5 +15,13 @@ class VectorDbBase(ABC):
         """Vector search. Returns top_n most relevant results."""
 
     @abstractmethod
-    def iter_chunks(self) -> Iterator[Chunk]:
-        """Iterates all chunks stored in the vector database."""
+    def iter_chunks(self, where: Optional[Dict[str, str]] = None) -> Iterator[Chunk]:
+        """
+        Iterates all chunks stored in the vector database.
+
+        For simplicity exposes 'where' argument which is a ChromaDB specific filter.
+        """
+
+    @abstractmethod
+    def delete_chunks(self, chunk_ids: List[UUID]) -> None:
+        pass

@@ -3,7 +3,6 @@ from datetime import datetime
 
 
 @dataclass
-class Document:
+class DocumentMeta:
     file_path: str
-    content: str
     modified_at: datetime

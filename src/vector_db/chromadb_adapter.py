@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Iterator, List
+from typing import Dict, Iterator, List, Optional
 from uuid import UUID
 
 import chromadb
@@ -12,7 +12,7 @@ from src.vector_db.models import Chunk
 class ChromaDbAdapter(VectorDbBase):
     def __init__(self, collection_name: str) -> None:
         # TODO: Support adding EmbeddingServiceBase and replacing ChromaDB default embedder.
-        self._client = chromadb.Client()
+        self._client = chromadb.PersistentClient(path="./chroma_db")
         self._collection = self._client.create_collection(collection_name)
 
     def add_chunks(self, chunks: List[Chunk]) -> None:
@@ -20,7 +20,12 @@ class ChromaDbAdapter(VectorDbBase):
         ids: List[str] = [str(chunk.id) for chunk in chunks]
 
         metadatas: List[Metadata] = [
-            {"modified_at": chunk.modified_at.isoformat(), "file_path": chunk.file_path}
+            {
+                "modified_at": chunk.modified_at.isoformat(),
+                "file_path": chunk.file_path,
+                "line_start": chunk.line_start,
+                "line_end": chunk.line_end,
+            }
             for chunk in chunks
         ]
 
@@ -44,6 +49,7 @@ class ChromaDbAdapter(VectorDbBase):
         chunks_out: List[Chunk] = []
 
         for i in range(len(ids)):
+            # Can be simplified by adding a "get_safe_val" or similar.
             modified_at = metas[i].get("modified_at")
             if not isinstance(modified_at, str):
                 raise ValueError(f"Expected str, got {type(modified_at)}.")
@@ -51,24 +57,35 @@ class ChromaDbAdapter(VectorDbBase):
             file_path = metas[i].get("file_path")
             if not isinstance(file_path, str):
                 raise ValueError(f"Expected str, got {type(file_path)}.")
-
+            line_start = metas[i].get("line_start")
+            if not isinstance(line_start, int):
+                raise ValueError(f"Expected int, got {type(line_start)}.")
+            line_end = metas[i].get("line_end")
+            if not isinstance(line_end, int):
+                raise ValueError(f"Expected int, got {type(line_end)}.")
             chunks_out.append(
                 Chunk(
                     id=UUID(ids[i]),
                     content=docs[i],
                     modified_at=modified_at,
                     file_path=file_path,
+                    line_start=line_start,
+                    line_end=line_end,
                 )
             )
 
         return chunks_out
 
-    def iter_chunks(self) -> Iterator[Chunk]:
+    def iter_chunks(self, where: Optional[Dict[str, str]] = None) -> Iterator[Chunk]:
         offset = 0
         limit = 100
 
         while True:
-            results = self._collection.get(limit=limit, offset=offset)
+            results = self._collection.get(
+                limit=limit,
+                offset=offset,
+                where=where,  # type: ignore
+            )
 
             ids = results["ids"]
 
@@ -79,6 +96,7 @@ class ChromaDbAdapter(VectorDbBase):
             metas = results["metadatas"] or []
 
             for i in range(len(ids)):
+                # Can be simplified by adding a "get_safe_val" or similar.
                 modified_at = metas[i].get("modified_at")
                 if not isinstance(modified_at, str):
                     raise ValueError(f"Expected str, got {type(modified_at)}.")
@@ -86,11 +104,23 @@ class ChromaDbAdapter(VectorDbBase):
                 file_path = metas[i].get("file_path")
                 if not isinstance(file_path, str):
                     raise ValueError(f"Expected str, got {type(file_path)}.")
+                line_start = metas[i].get("line_start")
+                if not isinstance(line_start, int):
+                    raise ValueError(f"Expected int, got {type(line_start)}.")
+                line_end = metas[i].get("line_end")
+                if not isinstance(line_end, int):
+                    raise ValueError(f"Expected int, got {type(line_end)}.")
                 yield Chunk(
                     id=UUID(ids[i]),
                     content=docs[i],
                     modified_at=modified_at,
                     file_path=file_path,
+                    line_start=line_start,
+                    line_end=line_end,
                 )
 
             offset += limit
+
+    def delete_chunks(self, chunk_ids: List[UUID]) -> None:
+        # Maybe batch if list is very long? I hope ChromaDB does so internally.
+        self._collection.delete(ids=[str(chunk_id) for chunk_id in chunk_ids])

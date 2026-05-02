@@ -9,3 +9,5 @@ class Chunk:
     content: str
     modified_at: datetime
     file_path: str
+    line_start: int
+    line_end: int
