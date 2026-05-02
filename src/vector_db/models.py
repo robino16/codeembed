@@ -1,12 +1,11 @@
 from dataclasses import dataclass
-from typing import Dict
+from datetime import datetime
 from uuid import UUID
-
-from src.types import CommonType
 
 
 @dataclass
 class Chunk:
     id: UUID
     content: str
-    metadata: Dict[str, CommonType]
+    modified_at: datetime
+    file_path: str

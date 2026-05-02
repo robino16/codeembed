@@ -17,6 +17,10 @@ class LocalDocProvider(DocProviderBase):
         self._skip_keywords = skip_keywords
 
     def iter(self) -> Iterator[Document]:
+        # NOTE: We could split this into two methods,
+        #       one for iter_metadata and one for download_document
+        #       currently doc provider filters documents
+        #       this is a OK for a simple app
         for root, _, files in os.walk(self._base_path):
             for file_name in files:
                 file_path = os.path.join(root, file_name)

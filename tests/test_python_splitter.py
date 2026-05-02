@@ -1,4 +1,4 @@
-from src.splitters.python_splitter import PythonFileSplitter
+from src.doc_splitters.python_splitter import PythonFileSplitter
 
 
 def test_detects_class():
