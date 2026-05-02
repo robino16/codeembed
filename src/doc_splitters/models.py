@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal
+from typing import List, Literal
 
 SegmentType = Literal["function", "class", "section"]
 
@@ -10,3 +10,10 @@ class FileSegment:
     line_end: int
     content: str
     type: SegmentType
+
+
+@dataclass
+class SplittedFile:
+    file_path: str
+    full_content: str
+    segments: List[FileSegment]

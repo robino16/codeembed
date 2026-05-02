@@ -1,5 +1,3 @@
-"""Ollama adapter."""
-
 from typing import Dict, List, Type, TypeVar
 
 import ollama
@@ -26,7 +24,6 @@ class OllamaLLMService(LLMServiceBase):
         return output_format.model_validate_json(data)
 
     def generate_response(self, messages: List[Dict[str, str]], llm_model: str) -> str:
-        """Uses ollama to generate a response."""
 
         resp = ollama.chat(
             model=llm_model,

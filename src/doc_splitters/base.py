@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from src.models.file_segment import FileSegment
+from src.doc_splitters.models import FileSegment
 
 
 class FileSplitterBase(ABC):
