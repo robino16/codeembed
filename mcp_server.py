@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager, suppress
 
 from mcp.server.fastmcp import FastMCP
 
-from bootstrap.services import embed_loop, get_search_service
+from src.bootstrap.services import embed_loop, get_search_service
 
 
 @asynccontextmanager

@@ -1,6 +1,6 @@
 import logging
 
-from bootstrap.services import get_embedder_service, get_search_service
+from src.bootstrap.services import get_embedder_service, get_search_service
 from src.setup_logger import setup_logger
 
 logger = logging.getLogger(__name__)

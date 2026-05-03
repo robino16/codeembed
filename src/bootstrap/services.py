@@ -3,10 +3,10 @@ from functools import lru_cache
 import logging
 import os
 
-from config.models import CodebaseEmbedderConfig
-from doc_embedder.doc_embedder import DocEmbedder
-from doc_provider.local_doc_provider import LocalDocProvider
-from llm.ollama_adapter import OllamaLLMService
+from src.config.models import CodebaseEmbedderConfig
+from src.doc_embedder.doc_embedder import DocEmbedder
+from src.doc_provider.local_doc_provider import LocalDocProvider
+from src.llm.ollama_adapter import OllamaLLMService
 from src.doc_search_service.doc_search_service import DocSearchService
 from src.vector_db.chromadb_adapter import ChromaDbAdapter
 
