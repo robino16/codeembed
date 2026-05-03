@@ -20,14 +20,7 @@ def _segment_to_chunk(
     llm_model: str,
 ) -> str:
 
-    # NOTE: Perhaps we could use the segment type condionally?
-    #       For documentation (like markdown) just embed it directly?
-
-    # To ensure up to date file,
-    # We could read it's content again here right before embedding.
-    # To ensure we get a updated version.
-
-    # If the file was updated within e.g., last 10 seconds, we should have a debounce and wait to embed it again.
+    # NOTE: For markdown files we could embed directly without LLM summarization.
 
     logger.info(
         "Analyzing segment %s in file %s...", segment.content.split("\n")[0], file_path
@@ -110,8 +103,8 @@ class DocEmbedder:
             ext = file.split(".")[-1]
             splitter = DocSplitterFactory.create(ext)
             if splitter is None:
-                # We could alternatively embed the full file as a fallback.
-                # As long as we trust filter system.
+                # NOTE: We could alternatively embed the full file as a fallback.
+                #       As long as we trust filter system.
                 logger.warning(
                     f"Cannot embed file at path '{file}'. No splitter implemented for this file extension."
                 )

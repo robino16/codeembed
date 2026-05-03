@@ -14,9 +14,12 @@ class LocalDocProvider(DocProviderBase):
         self._supported_extensions = [
             ext.lower().split(".")[-1] for ext in supported_extensions
         ]
-        self._skip_keywords = skip_keywords
+        self._skip_keywords = [kw.lower() for kw in skip_keywords]
 
     def iter(self) -> Iterator[DocumentMeta]:
+
+        # TODO: Rely on .gitignore to skip files.
+
         for root, _, files in os.walk(self._base_path):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
@@ -28,7 +31,7 @@ class LocalDocProvider(DocProviderBase):
                 # we skip here to avoid loading unecessary documents
                 skip = False
                 for skip_kw in self._skip_keywords:
-                    if skip_kw.lower() in file_path:
+                    if skip_kw in file_path.lower():
                         skip = True
                         break
                 if skip:
