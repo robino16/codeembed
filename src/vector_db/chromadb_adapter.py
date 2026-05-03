@@ -14,7 +14,7 @@ T = TypeVar("T")
 class ChromaDbAdapter(VectorDbBase):
     def __init__(self, collection_name: str) -> None:
         # TODO: Support adding EmbeddingServiceBase and replacing ChromaDB default embedder.
-        self._client = chromadb.PersistentClient(path="./codeprism")
+        self._client = chromadb.PersistentClient(path="./.codeprism")
         self._collection = self._client.get_or_create_collection(collection_name)
 
     def add_chunks(self, chunks: List[Chunk]) -> None:
