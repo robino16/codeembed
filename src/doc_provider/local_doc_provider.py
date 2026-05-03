@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Iterator, List
 
 from src.doc_provider.base import DocProviderBase
-from src.doc_provider.models import DocumentMeta
+from src.doc_provider.models import DocumentContent, DocumentMeta
 
 
 class LocalDocProvider(DocProviderBase):
@@ -46,6 +46,9 @@ class LocalDocProvider(DocProviderBase):
                     modified_at=modified_at,
                 )
 
-    def get_content(self, file_path: str) -> str:
+    def get_content(self, file_path: str) -> DocumentContent:
         with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
+            content = f.read()
+        modified_ts = os.path.getmtime(file_path)
+        modified_at = datetime.fromtimestamp(modified_ts, tz=timezone.utc)
+        return DocumentContent(content=content, modified_at=modified_at)

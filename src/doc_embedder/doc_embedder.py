@@ -6,7 +6,6 @@ from src.doc_provider.base import DocProviderBase
 from src.doc_splitters.factory import DocSplitterFactory
 from src.doc_splitters.models import FileSegment
 from src.llm.base import LLMServiceBase
-from src.utils.time_utils import utc_now
 from src.vector_db.base import VectorDbBase
 from src.vector_db.models import Chunk
 
@@ -34,23 +33,21 @@ def _segment_to_chunk(
         "Analyzing segment %s in file %s...", segment.content.split("\n")[0], file_path
     )
 
-    input("Press enter to confirm (ctrl+c to abort)...")
-
     messages = [
         {"role": "system", "content": "You are an expert at describing code."},
         {
             "role": "user",
             "content": f"""In the context of the following file:
 <File Path>{file_path}</File Path>
-<FileContent/>
-{full_content}
 <FileContent>
+{full_content}
+</FileContent>
 Please describe the purpose following {segment.type}:
 <Segment>
 <Line Start>{segment.line_start}</Line Start>
-<Title>
-{segment.content.split("\n")[0]}
-</Title>
+<Content>
+{segment.content}
+</Content>
 <Line End>{segment.line_end}</Line End>
 </Segment>
 If this is a function or class, please describe what it does and how it interacts with the application.
@@ -66,7 +63,7 @@ This {segment.type} is ...
 
     response = llm_service.generate_response(messages, llm_model)
 
-    print(f"LLM summary:\n{response}\n")
+    logger.info("Generated summary for segment in file %s: %s", file_path, response)
 
     return response
 
@@ -120,17 +117,17 @@ class DocEmbedder:
                 )
                 num_skipped += 1
                 continue
-            content = self._doc_provider.get_content(file)
-            segments = splitter.split_file(content)
+            doc = self._doc_provider.get_content(file)
+            segments = splitter.split_file(doc.content)
             chunks = []
             for segment in segments:
                 summary = _segment_to_chunk(
-                    self._llm_service, segment, content, file, self._llm_model
+                    self._llm_service, segment, doc.content, file, self._llm_model
                 )
                 chunks.append(
                     Chunk(
                         id=uuid4(),
-                        modified_at=utc_now(),  # TODO: Use actual modified_date of file.
+                        modified_at=doc.modified_at,
                         content=summary,
                         file_path=file,
                         line_start=segment.line_start,

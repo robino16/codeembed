@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Iterator
 
-from src.doc_provider.models import DocumentMeta
+from src.doc_provider.models import DocumentContent, DocumentMeta
 
 
 class DocProviderBase(ABC):
@@ -10,5 +10,5 @@ class DocProviderBase(ABC):
         """Iterates metadata of files."""
 
     @abstractmethod
-    def get_content(self, file_path: str) -> str:
+    def get_content(self, file_path: str) -> DocumentContent:
         """Gets the actual file content."""
