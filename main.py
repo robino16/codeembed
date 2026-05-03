@@ -18,7 +18,7 @@ def main():
     doc_provider = LocalDocProvider(
         base_path=".",
         supported_file_extensions=["py"],
-        skip_keywords=[
+        extra_skip_keywords=[
             "venv",
             "pytest_cache",
             "node_modules",

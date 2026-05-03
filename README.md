@@ -43,7 +43,7 @@ codeprism serve
 ```
 
 The code embedder will apply the `.gitignore` in the root folder.
-By default it also ignores: `node_modules/`, `venv/`, `.venv/`, `.env` and `.env.local`.
+By default it also ignores: `node_modules/`, `venv/`, `.venv/`, `.env`, `.env.local`, `build/` and `dist/`.
 
 ## Contributing
 

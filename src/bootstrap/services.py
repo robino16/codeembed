@@ -49,7 +49,7 @@ def get_embedder_service() -> DocEmbedder:
     doc_provider = LocalDocProvider(
         base_path=".",
         supported_file_extensions=_SUPPORTED_FILE_EXTENSIONS,
-        skip_keywords=[],
+        extra_skip_keywords=[],
     )
     vector_db = ChromaDbAdapter(collection_name="codebase")
     llm_service = OllamaLLMService()
