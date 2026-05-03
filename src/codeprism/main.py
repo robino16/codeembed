@@ -17,7 +17,7 @@ def main():
     embedder.embed_codebase()
 
     search_query = "How does this code use LLMs?"
-    search_result = search_service.search(search_query, top_n=5)
+    search_result = search_service.search(search_query, top_n=10)
 
     print("Search result:")
     print(search_result)

@@ -244,8 +244,8 @@ wheels = [
 ]
 
 [[package]]
-name = "code-embedder"
-version = "0.1.0"
+name = "codeprism"
+version = "0.1.0b0"
 source = { virtual = "." }
 dependencies = [
     { name = "chromadb" },

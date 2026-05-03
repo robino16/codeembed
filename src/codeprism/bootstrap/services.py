@@ -22,7 +22,7 @@ _DEFAULT_SLEEP_INTERVAL = 60
 
 @lru_cache(maxsize=1)
 def get_search_service() -> DocSearchService:
-    vector_db = ChromaDbAdapter(collection_name="codebase_embeddings")
+    vector_db = ChromaDbAdapter(collection_name="codebase")
     search_service = DocSearchService(vector_db)
     return search_service
 

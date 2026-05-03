@@ -22,7 +22,18 @@ mcp = FastMCP("Codebase Embedder", lifespan=lifespan, json_response=True)
 
 @mcp.tool()
 def search(query: str, top_n: int = 10) -> str:
-    """Searches the embedded codebases."""
+    """Searches the embedded codebases using semantic similarity.
+
+    Use this tool as the FIRST step for any question about the codebase — how something
+    works, where something is defined, what calls what, etc. Prefer this over grep or
+    file reads for exploratory questions; it returns ranked, summarized results instantly.
+
+    Args:
+        query: A natural-language description of what you're looking for.
+               Examples: "how are deltas computed", "LLM service abstraction",
+               "error handling in the embedding pipeline".
+        top_n: Number of results to return (default 10).
+    """
     search_service = get_search_service()
     return search_service.search(query, top_n)
 
@@ -31,4 +42,4 @@ def search(query: str, top_n: int = 10) -> str:
 
 
 if __name__ == "__main__":
-    mcp.run(transport="streamable-http")
+    mcp.run(transport="stdio")

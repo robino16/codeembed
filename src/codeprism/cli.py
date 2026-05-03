@@ -145,6 +145,9 @@ def init():
     _ensure_model_downloaded(model, downloaded_models)
     _write_config(model)
 
+    # TODO: Consider modifying .claude/settings.json to add our MCP server config.
+    #       Just ask the user (add support for Claude Yes/No prompt).
+
     typer.echo("\nDone. Run 'codeprism serve' to start the MCP server.")
 
 
@@ -161,7 +164,7 @@ def serve():
 
     from codeprism.mcp_server import mcp
     typer.echo("Starting CodePrism MCP server...")
-    mcp.run(transport="streamable-http")
+    mcp.run(transport="stdio")
 
 
 @app.command()

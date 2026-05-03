@@ -52,6 +52,14 @@ codeprism embed
 
 The code embedder will apply the `.gitignore` in the root folder.
 
+## Add to Claude Code
+
+```bash
+claude mcp add codeprism -- uv run codeprism serve
+```
+
+Also add `mcp__codeprism__search` to `allowedTools` in Claude's config file.
+
 ## Contributing
 
 ### Setup
