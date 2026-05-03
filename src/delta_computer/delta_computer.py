@@ -21,10 +21,7 @@ class DeltaComputer:
 
         May not have best perfomance since we iterate each chunk stored in the vector database.
         """
-
-        # TODO: Note that we need to use checksums instead of modifed_at from file provider.
-        #       The reason is that editors may update modified date even without any changes.
-
+        
         file_paths_to_update = set()
 
         file_path_to_chunk_ids: Dict[str, List[UUID]] = {}
@@ -60,6 +57,8 @@ class DeltaComputer:
                     if doc.sha256_checksum == old_checksums[file_path]:
                         # We skip files with same checksum even if modified_at is updated.
                         # Some editors update modified_at even without any changes.
+                        # TODO: We should probably update modified_at in vector database
+                        #       to avoid re-reading this file on every run.
                         continue
                 
                 # file updated or added

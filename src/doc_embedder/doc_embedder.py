@@ -21,6 +21,7 @@ def _segment_to_chunk(
 ) -> str:
 
     # NOTE: For markdown files we could embed directly without LLM summarization.
+    #       Just split on ## headers.
 
     logger.info(
         "Analyzing segment %s in file %s...", segment.content.split("\n")[0], file_path
@@ -75,6 +76,7 @@ class DocEmbedder:
         self._llm_model = llm_model
 
     def embed_codebase(self) -> None:
+        """ Embeds the codebase and prepares it for vector search."""
 
         logger.info("Computing deltas...")
 
