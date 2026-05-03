@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from utils.checksum_utils import string_to_sha256
+from src.utils.checksum_utils import string_to_sha256
 
 
 @dataclass

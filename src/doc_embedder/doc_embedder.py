@@ -87,7 +87,7 @@ class DocEmbedder:
         logger.info(
             f"Detected {len(chunks_ids_to_remove)} chunks to delete from vector database."
         )
-        logger.info(f"Detected {len(files_to_update)} files to reprocess.")
+        logger.info(f"Detected {len(files_to_update)} files to process.")
 
         if chunks_ids_to_remove:
             logger.info(
@@ -100,8 +100,8 @@ class DocEmbedder:
         num_processed = 0
         num_skipped = 0
 
-        for file in files_to_update:
-            logger.info(f"Processing file '{file}'...")
+        for i, file in enumerate(files_to_update):
+            logger.info(f"Processing file '{file}' ({i + 1}/{len(files_to_update)})...")
             ext = file.split(".")[-1]
             splitter = DocSplitterFactory.create(ext)
             if splitter is None:
@@ -134,7 +134,7 @@ class DocEmbedder:
             logger.info(f"Saving {len(chunks)} chunks to vector database.")
             self._vector_db.add_chunks(chunks)
             num_processed += 1
-            logger.info(f"Successfully embedded file: '{file}'.")
+            logger.info(f"Successfully embedded file: '{file}' ({i + 1}/{len(files_to_update)}).")
 
         if num_processed > 0:
             logger.info(f"Successfully embedded {num_processed} files.")

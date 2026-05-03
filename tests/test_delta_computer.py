@@ -3,20 +3,23 @@ from uuid import uuid4
 
 from src.delta_computer.delta_computer import DeltaComputer
 from src.doc_provider.base import DocProviderBase
-from src.doc_provider.models import DocumentMeta
+from src.doc_provider.models import DocumentContent, DocumentMeta
 from src.vector_db.base import VectorDbBase
 from src.vector_db.models import Chunk
+from src.utils.time_utils import utc_now
 
 
 class FakeDocProvider(DocProviderBase):
-    def __init__(self, docs):
+    def __init__(self, docs, content_by_path=None):
         self._docs = docs
+        self._content_by_path = content_by_path or {}
 
     def iter(self):
         return iter(self._docs)
 
-    def get_content(self, file_path) -> str:
-        raise NotImplementedError()
+    def get_content(self, file_path: str) -> DocumentContent:
+        content = self._content_by_path.get(file_path, "")
+        return DocumentContent(content=content, modified_at=utc_now())
 
 
 class FakeVectorDb(VectorDbBase):
@@ -37,7 +40,7 @@ class FakeVectorDb(VectorDbBase):
 
 
 def test_detects_new_document():
-    now = datetime.now()
+    now = utc_now()
 
     doc_provider = FakeDocProvider(
         [
@@ -47,7 +50,7 @@ def test_detects_new_document():
 
     vector_db = FakeVectorDb([])
 
-    dc = DeltaComputer(doc_provider, vector_db)
+    dc = DeltaComputer(doc_provider, vector_db, debounce_seconds=0)
     to_delete, to_update = dc.compute_deltas()
 
     assert to_delete == set()
@@ -55,19 +58,22 @@ def test_detects_new_document():
 
 
 def test_detects_deleted_document():
-    now = datetime.now()
+    now = utc_now()
+    chunk_id = uuid4()
 
     doc_provider = FakeDocProvider([])
 
     vector_db = FakeVectorDb(
         [
             Chunk(
-                id=uuid4(),
+                id=chunk_id,
                 content="",
                 file_path="file1.txt",
                 modified_at=now,
                 line_end=10,
                 line_start=4,
+                raw_code=None,
+                file_sha256_checksum="",
             )
         ]
     )
@@ -75,35 +81,39 @@ def test_detects_deleted_document():
     dc = DeltaComputer(doc_provider, vector_db)
     to_delete, to_update = dc.compute_deltas()
 
-    assert to_delete == {"file1.txt"}
+    assert to_delete == {chunk_id}
     assert to_update == set()
 
 
 def test_detects_updated_document():
-    now = datetime.now()
+    now = utc_now()
     older = now - timedelta(days=1)
+    chunk_id = uuid4()
 
     doc_provider = FakeDocProvider(
         [
-            DocumentMeta(file_path="file1.txt", content="", modified_at=now),
-        ]
+            DocumentMeta(file_path="file1.txt", modified_at=now),
+        ],
+        content_by_path={"file1.txt": "updated content"},
     )
 
     vector_db = FakeVectorDb(
         [
             Chunk(
-                id=uuid4(),
+                id=chunk_id,
                 content="",
                 file_path="file1.txt",
                 modified_at=older,
                 line_start=1,
                 line_end=10,
+                raw_code=None,
+                file_sha256_checksum="old_checksum",
             )
         ]
     )
 
-    dc = DeltaComputer(doc_provider, vector_db)
+    dc = DeltaComputer(doc_provider, vector_db, debounce_seconds=0)
     to_delete, to_update = dc.compute_deltas()
 
-    assert to_delete == set()
+    assert to_delete == {chunk_id}
     assert to_update == {"file1.txt"}

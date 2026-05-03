@@ -4,7 +4,7 @@ from uuid import UUID
 
 from src.doc_provider.base import DocProviderBase
 from src.vector_db.base import VectorDbBase
-from utils.time_utils import utc_now
+from src.utils.time_utils import utc_now
 
 
 class DeltaComputer:
@@ -21,7 +21,7 @@ class DeltaComputer:
 
         May not have best perfomance since we iterate each chunk stored in the vector database.
         """
-        
+
         file_paths_to_update = set()
 
         file_path_to_chunk_ids: Dict[str, List[UUID]] = {}
