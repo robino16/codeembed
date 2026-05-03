@@ -8,13 +8,13 @@ from src.bootstrap.services import embed_loop, get_search_service
 
 @asynccontextmanager
 async def lifespan(server):
-      task = asyncio.create_task(embed_loop())
-      try:
-          yield
-      finally:
-          task.cancel()
-          with suppress(asyncio.CancelledError):
-              await task
+    task = asyncio.create_task(embed_loop())
+    try:
+        yield
+    finally:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
 
 
 mcp = FastMCP("Codebase Embedder", lifespan=lifespan, json_response=True)
