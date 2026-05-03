@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
 
 
@@ -11,3 +12,4 @@ class Chunk:
     file_path: str
     line_start: int
     line_end: int
+    raw_code: Optional[str]

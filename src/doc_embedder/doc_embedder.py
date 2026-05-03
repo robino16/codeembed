@@ -125,6 +125,7 @@ class DocEmbedder:
                         file_path=file,
                         line_start=segment.line_start,
                         line_end=segment.line_end,
+                        raw_code=segment.content,
                     )
                 )
             logger.info(f"Saving {len(chunks)} chunks to vector database.")

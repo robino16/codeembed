@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Iterator, List, Optional
+from typing import Dict, Iterator, List, Optional, Type, TypeVar
 from uuid import UUID
 
 import chromadb
@@ -7,6 +7,8 @@ from chromadb.api.types import Metadata, QueryResult
 
 from src.vector_db.base import VectorDbBase
 from src.vector_db.models import Chunk
+
+T = TypeVar("T")
 
 
 class ChromaDbAdapter(VectorDbBase):
@@ -25,6 +27,7 @@ class ChromaDbAdapter(VectorDbBase):
                 "file_path": chunk.file_path,
                 "line_start": chunk.line_start,
                 "line_end": chunk.line_end,
+                "raw_code": chunk.raw_code,  # Assume ChromaDB can handle None values.
             }
             for chunk in chunks
         ]
@@ -50,19 +53,12 @@ class ChromaDbAdapter(VectorDbBase):
 
         for i in range(len(ids)):
             # Can be simplified by adding a "get_safe_val" or similar.
-            modified_at = metas[i].get("modified_at")
-            if not isinstance(modified_at, str):
-                raise ValueError(f"Expected str, got {type(modified_at)}.")
+            modified_at = self._get_safe_val(metas[i], "modified_at", str)
             modified_at = datetime.fromisoformat(modified_at)
-            file_path = metas[i].get("file_path")
-            if not isinstance(file_path, str):
-                raise ValueError(f"Expected str, got {type(file_path)}.")
-            line_start = metas[i].get("line_start")
-            if not isinstance(line_start, int):
-                raise ValueError(f"Expected int, got {type(line_start)}.")
-            line_end = metas[i].get("line_end")
-            if not isinstance(line_end, int):
-                raise ValueError(f"Expected int, got {type(line_end)}.")
+            file_path = self._get_safe_val(metas[i], "file_path", str)
+            line_start = self._get_safe_val(metas[i], "line_start", int)
+            line_end = self._get_safe_val(metas[i], "line_end", int)
+            raw_code = self._get_safe_val(metas[i], "raw_code", str, allow_none=True)
             chunks_out.append(
                 Chunk(
                     id=UUID(ids[i]),
@@ -71,6 +67,7 @@ class ChromaDbAdapter(VectorDbBase):
                     file_path=file_path,
                     line_start=line_start,
                     line_end=line_end,
+                    raw_code=raw_code,
                 )
             )
 
@@ -97,19 +94,12 @@ class ChromaDbAdapter(VectorDbBase):
 
             for i in range(len(ids)):
                 # Can be simplified by adding a "get_safe_val" or similar.
-                modified_at = metas[i].get("modified_at")
-                if not isinstance(modified_at, str):
-                    raise ValueError(f"Expected str, got {type(modified_at)}.")
+                modified_at = self._get_safe_val(metas[i], "modified_at", str)
                 modified_at = datetime.fromisoformat(modified_at)
-                file_path = metas[i].get("file_path")
-                if not isinstance(file_path, str):
-                    raise ValueError(f"Expected str, got {type(file_path)}.")
-                line_start = metas[i].get("line_start")
-                if not isinstance(line_start, int):
-                    raise ValueError(f"Expected int, got {type(line_start)}.")
-                line_end = metas[i].get("line_end")
-                if not isinstance(line_end, int):
-                    raise ValueError(f"Expected int, got {type(line_end)}.")
+                file_path = self._get_safe_val(metas[i], "file_path", str)
+                line_start = self._get_safe_val(metas[i], "line_start", int)
+                line_end = self._get_safe_val(metas[i], "line_end", int)
+                raw_code = self._get_safe_val(metas[i], "raw_code", str, allow_none=True)
                 yield Chunk(
                     id=UUID(ids[i]),
                     content=docs[i],
@@ -117,6 +107,7 @@ class ChromaDbAdapter(VectorDbBase):
                     file_path=file_path,
                     line_start=line_start,
                     line_end=line_end,
+                    raw_code=raw_code,
                 )
 
             offset += limit
@@ -124,3 +115,11 @@ class ChromaDbAdapter(VectorDbBase):
     def delete_chunks(self, chunk_ids: List[UUID]) -> None:
         # Maybe batch if list is very long? I hope ChromaDB does so internally.
         self._collection.delete(ids=[str(chunk_id) for chunk_id in chunk_ids])
+
+    def _get_safe_val(self, meta: Metadata, key: str, expected_type: Type[T], allow_none: bool = False) -> T:
+        val = meta.get(key)
+        if val is None and allow_none:
+            return None  # type: ignore
+        if not isinstance(val, expected_type):
+            raise ValueError(f"Expected {expected_type}, got {type(val)} for ChromaDB metadata key '{key}'.")
+        return val
