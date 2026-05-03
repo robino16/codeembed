@@ -2,6 +2,12 @@
 
 This embeds your codebase and other codebases you need as context.
 
+Uses [CromaDB](https://github.com/chroma-core/chroma) for quick and easy local vector storage.
+Make sure you have installed [Python](python.org) and [uv](https://github.com/astral-sh/uv) (via `pip install uv`).
+
+The codebase embedder works best in combination with LLM model for code analysis and summarization.
+You can use local LLMs [Ollama](https://github.com/ollama/ollama-python).
+
 The idea is that you do:
 
 ```bash
