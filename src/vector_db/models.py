@@ -13,3 +13,4 @@ class Chunk:
     line_start: int
     line_end: int
     raw_code: Optional[str]
+    file_sha256_checksum: str

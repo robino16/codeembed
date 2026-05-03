@@ -31,11 +31,13 @@ class DeltaComputer:
         chunk_ids_to_delete: Set[UUID] = set()
 
         # Collect modified_at stored in our database.
-        old: Dict[str, datetime] = {}
+        old_modified_at: Dict[str, datetime] = {}
+        old_checksums: Dict[str, str] = {}
         for chunk in self._vector_db.iter_chunks():
-            old[chunk.file_path] = max(
-                old.get(chunk.file_path, chunk.modified_at), chunk.modified_at
+            old_modified_at[chunk.file_path] = max(
+                old_modified_at.get(chunk.file_path, chunk.modified_at), chunk.modified_at
             )
+            old_checksums[chunk.file_path] = chunk.file_sha256_checksum
 
             file_path_to_chunk_ids[chunk.file_path] = file_path_to_chunk_ids.get(
                 chunk.file_path, []
@@ -52,7 +54,14 @@ class DeltaComputer:
                 # We skip files modified within the last N seconds
                 continue
 
-            if file_path not in old or old[file_path] < modified_at:
+            if file_path not in old_modified_at or old_modified_at[file_path] < modified_at:
+                if file_path in old_modified_at:
+                    doc = self._doc_provider.get_content(file_path)
+                    if doc.sha256_checksum == old_checksums[file_path]:
+                        # We skip files with same checksum even if modified_at is updated.
+                        # Some editors update modified_at even without any changes.
+                        continue
+                
                 # file updated or added
                 file_paths_to_update.add(file_path)
 
@@ -61,7 +70,7 @@ class DeltaComputer:
                     chunk_ids_to_delete.add(chunk_id)
 
         # Figure out which files have been removed.
-        for file_path in old:
+        for file_path in old_modified_at:
             if file_path not in current:
                 for chunk_id in file_path_to_chunk_ids.get(file_path, []):
                     chunk_ids_to_delete.add(chunk_id)

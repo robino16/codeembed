@@ -126,6 +126,7 @@ class DocEmbedder:
                         line_start=segment.line_start,
                         line_end=segment.line_end,
                         raw_code=segment.content,
+                        file_sha256_checksum=doc.sha256_checksum,
                     )
                 )
             logger.info(f"Saving {len(chunks)} chunks to vector database.")

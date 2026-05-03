@@ -28,6 +28,7 @@ class ChromaDbAdapter(VectorDbBase):
                 "line_start": chunk.line_start,
                 "line_end": chunk.line_end,
                 "raw_code": chunk.raw_code,  # Assume ChromaDB can handle None values.
+                "file_sha256_checksum": chunk.file_sha256_checksum,
             }
             for chunk in chunks
         ]
@@ -59,6 +60,7 @@ class ChromaDbAdapter(VectorDbBase):
             line_start = self._get_safe_val(metas[i], "line_start", int)
             line_end = self._get_safe_val(metas[i], "line_end", int)
             raw_code = self._get_safe_val(metas[i], "raw_code", str, allow_none=True)
+            file_sha256_checksum = self._get_safe_val(metas[i], "file_sha256_checksum", str)
             chunks_out.append(
                 Chunk(
                     id=UUID(ids[i]),
@@ -68,6 +70,7 @@ class ChromaDbAdapter(VectorDbBase):
                     line_start=line_start,
                     line_end=line_end,
                     raw_code=raw_code,
+                    file_sha256_checksum=file_sha256_checksum,
                 )
             )
 
@@ -100,6 +103,7 @@ class ChromaDbAdapter(VectorDbBase):
                 line_start = self._get_safe_val(metas[i], "line_start", int)
                 line_end = self._get_safe_val(metas[i], "line_end", int)
                 raw_code = self._get_safe_val(metas[i], "raw_code", str, allow_none=True)
+                file_sha256_checksum = self._get_safe_val(metas[i], "file_sha256_checksum", str)
                 yield Chunk(
                     id=UUID(ids[i]),
                     content=docs[i],
@@ -108,6 +112,7 @@ class ChromaDbAdapter(VectorDbBase):
                     line_start=line_start,
                     line_end=line_end,
                     raw_code=raw_code,
+                    file_sha256_checksum=file_sha256_checksum
                 )
 
             offset += limit
