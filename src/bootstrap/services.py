@@ -1,4 +1,6 @@
+import asyncio
 from functools import lru_cache
+import logging
 import os
 
 from config.models import CodebaseEmbedderConfig
@@ -8,8 +10,10 @@ from llm.ollama_adapter import OllamaLLMService
 from src.doc_search_service.doc_search_service import DocSearchService
 from src.vector_db.chromadb_adapter import ChromaDbAdapter
 
+logger = logging.getLogger(__name__)
+
 _SUPPORTED_FILE_EXTENSIONS = ["py"]
-_CONFIG_FILE_PATH = "codebase_embedder_config.json"
+_CONFIG_FILE_PATH = "codeprism_config.json"
 _DEFAULT_LLM_MODEL = "gpt-oss:20b"
 _DEFAULT_DEBOUNCE = 10
 
@@ -56,5 +60,14 @@ def get_embedder_service() -> DocEmbedder:
         llm_model=config.llm_model,
         debounce_seconds=config.debounce
     )
-    embedder.embed_codebase()
     return embedder
+
+
+async def embed_loop() -> None:
+      embedder = get_embedder_service()
+      while True:
+          try:
+              await asyncio.to_thread(embedder.embed_codebase)
+          except Exception:
+              logger.exception("Embedding run failed")
+          await asyncio.sleep(60)

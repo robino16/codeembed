@@ -1,8 +1,23 @@
+import asyncio
+from contextlib import asynccontextmanager, suppress
+
 from mcp.server.fastmcp import FastMCP
 
-from bootstrap.services import get_search_service
+from bootstrap.services import embed_loop, get_search_service
 
-mcp = FastMCP("Codebase Embedder", json_response=True)
+
+@asynccontextmanager
+async def lifespan(server):
+      task = asyncio.create_task(embed_loop())
+      try:
+          yield
+      finally:
+          task.cancel()
+          with suppress(asyncio.CancelledError):
+              await task
+
+
+mcp = FastMCP("Codebase Embedder", lifespan=lifespan, json_response=True)
 
 search_service = get_search_service()
 

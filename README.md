@@ -1,4 +1,4 @@
-# Codebase Embedder
+# CodePrism
 
 This embeds your codebase and other codebases you need as context.
 
@@ -11,13 +11,13 @@ You can use local LLMs [Ollama](https://github.com/ollama/ollama-python).
 The idea is that you do:
 
 ```bash
-uv add <package-name>
+uv add codeprism
 ```
 
 Then:
 
 ```bash
-<package-name> init
+codeprism init
 ```
 
 Just to make sure `.gitignore` excludes new folders.
@@ -27,19 +27,19 @@ The current codebase folder will automatically be embedded when running the MCP 
 You can then add extra codebases as context with:
 
 ```bash
-<package-name> add <local-file-path>
+codeprism add <local-file-path>
 ```
 
 or
 
 ```bash
-<package-name> add <github-repo-url>
+codeprism add <github-repo-url>
 ```
 
 Then start the MCP server with:
 
 ```bash
-<package-name> serve
+codeprism serve
 ```
 
 The code embedder will apply the `.gitignore` in the root folder.
