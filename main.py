@@ -17,14 +17,7 @@ def main():
 
     doc_provider = LocalDocProvider(
         base_path=".",
-        supported_file_extensions=["py"],
-        extra_skip_keywords=[
-            "venv",
-            "pytest_cache",
-            "node_modules",
-            ".env",
-            "dist",
-        ],  # consider using project's gitignore
+        supported_file_extensions=["py"]
     )
     vector_db = ChromaDbAdapter(collection_name="codeprism")
     llm_service = OllamaLLMService()
