@@ -11,7 +11,7 @@ You can use local LLMs [Ollama](https://github.com/ollama/ollama-python).
 The idea is that you do:
 
 ```bash
-uv add codeprism
+uv tool install codeprism
 ```
 
 Then:

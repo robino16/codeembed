@@ -2,8 +2,9 @@ import asyncio
 from functools import lru_cache
 import logging
 import os
+import tomllib
 
-from src.config.models import CodebaseEmbedderConfig
+from src.config.models import CodePrismConfig
 from src.doc_embedder.doc_embedder import DocEmbedder
 from src.doc_provider.local_doc_provider import LocalDocProvider
 from src.llm.ollama_adapter import OllamaLLMService
@@ -13,9 +14,10 @@ from src.vector_db.chromadb_adapter import ChromaDbAdapter
 logger = logging.getLogger(__name__)
 
 _SUPPORTED_FILE_EXTENSIONS = ["py"]
-_CONFIG_FILE_PATH = "codeprism_config.json"
+_CONFIG_FILE_PATH = "codeprism.toml"
 _DEFAULT_LLM_MODEL = "gpt-oss:20b"
 _DEFAULT_DEBOUNCE = 10
+_DEFAULT_SLEEP_INTERVAL = 60
 
 
 @lru_cache(maxsize=1)
@@ -26,20 +28,20 @@ def get_search_service() -> DocSearchService:
 
 
 @lru_cache(maxsize=1)
-def get_config() -> CodebaseEmbedderConfig:
+def get_config() -> CodePrismConfig:
     if os.path.isfile(_CONFIG_FILE_PATH):
         try:
-            with open(_CONFIG_FILE_PATH, "r", encoding="utf-8") as f:
-                content = f.read()
-            return CodebaseEmbedderConfig.model_validate_json(content)
+            with open("codeprism.toml", "rb") as f:
+                data = tomllib.load(f)
+            config = CodePrismConfig(**data["codeprism"])
+            return config
         except Exception:
             pass
-    default_config = CodebaseEmbedderConfig(
+    default_config = CodePrismConfig(
         llm_model=_DEFAULT_LLM_MODEL,
         debounce=_DEFAULT_DEBOUNCE,
+        sleep_interval=_DEFAULT_SLEEP_INTERVAL,
     )
-    with open(_CONFIG_FILE_PATH, "w", encoding="utf-8") as f:
-        f.write(default_config.model_dump_json(indent=2))
     return default_config
 
 
@@ -63,10 +65,10 @@ def get_embedder_service() -> DocEmbedder:
 
 
 async def embed_loop() -> None:
-      embedder = get_embedder_service()
-      while True:
-          try:
-              await asyncio.to_thread(embedder.embed_codebase)
-          except Exception:
-              logger.exception("Embedding run failed")
-          await asyncio.sleep(60)
+    embedder = get_embedder_service()
+    while True:
+        try:
+            await asyncio.to_thread(embedder.embed_codebase)
+        except Exception:
+            logger.exception("Embedding run failed")
+        await asyncio.sleep(60)

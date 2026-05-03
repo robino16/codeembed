@@ -1,7 +1,7 @@
 [project]
-name = "code-embedder"
+name = "codeprism"
 version = "0.1.0"
-description = "Add your description here"
+description = "Embeds your codebase and makes it available for quick LLM lookups via MCP."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -11,3 +11,6 @@ dependencies = [
     "pydantic==2.13.3",
     "pytest==9.0.3",
 ]
+
+[project.scripts]
+codeprism = "codeprism.cli:app"

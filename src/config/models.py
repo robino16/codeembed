@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from pydantic import BaseModel
 
-
-class CodebaseEmbedderConfig(BaseModel):
+@dataclass
+class CodePrismConfig:
     llm_model: str
     debounce: int
+    sleep_interval: int

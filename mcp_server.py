@@ -19,12 +19,11 @@ async def lifespan(server):
 
 mcp = FastMCP("Codebase Embedder", lifespan=lifespan, json_response=True)
 
-search_service = get_search_service()
-
 
 @mcp.tool()
 def search(query: str, top_n: int = 10) -> str:
     """Searches the embedded codebases."""
+    search_service = get_search_service()
     return search_service.search(query, top_n)
 
 
