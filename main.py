@@ -1,5 +1,6 @@
 import logging
 
+from bootstrap.services import get_search_service
 from src.doc_search_service.doc_search_service import DocSearchService
 from src.doc_embedder.doc_embedder import DocEmbedder
 from src.doc_provider.local_doc_provider import LocalDocProvider
@@ -17,7 +18,7 @@ def main():
 
     doc_provider = LocalDocProvider(
         base_path=".",
-        supported_extensions=["py"],
+        supported_file_extensions=["py"],
         skip_keywords=[
             "venv",
             "pytest_cache",
@@ -34,7 +35,7 @@ def main():
     embedder.embed_codebase()
 
     search_query = "How does this code use LLMs?"
-    search_service = DocSearchService(vector_db)
+    search_service = get_search_service()
     search_result = search_service.search(search_query, top_n=5)
 
     print("Search result:")

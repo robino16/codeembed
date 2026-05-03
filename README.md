@@ -42,6 +42,9 @@ Then start the MCP server with:
 <package-name> serve
 ```
 
+The code embedder will apply the `.gitignore` in the root folder.
+By default it also ignores: `node_modules/`, `venv/`, `.venv/`, `.env` and `.env.local`.
+
 ## Contributing
 
 ### Running Tests

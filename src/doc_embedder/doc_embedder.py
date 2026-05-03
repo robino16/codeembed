@@ -69,11 +69,13 @@ class DocEmbedder:
         vector_db: VectorDbBase,
         llm_service: LLMServiceBase,
         llm_model: str,
+        debounce_seconds: int = 10,
     ) -> None:
         self._doc_provider = doc_provider
         self._vector_db = vector_db
         self._llm_service = llm_service
         self._llm_model = llm_model
+        self._debounce_seconds = debounce_seconds
 
     def embed_codebase(self) -> None:
         """ Embeds the codebase and prepares it for vector search."""
@@ -81,7 +83,7 @@ class DocEmbedder:
         logger.info("Computing deltas...")
 
         chunks_ids_to_remove, files_to_update = DeltaComputer(
-            self._doc_provider, self._vector_db
+            self._doc_provider, self._vector_db, self._debounce_seconds
         ).compute_deltas()
 
         logger.info(

@@ -251,6 +251,7 @@ dependencies = [
     { name = "chromadb" },
     { name = "mcp" },
     { name = "ollama" },
+    { name = "pydantic" },
     { name = "pytest" },
 ]
 
@@ -259,6 +260,7 @@ requires-dist = [
     { name = "chromadb", specifier = "==1.5.8" },
     { name = "mcp", specifier = "==1.26.0" },
     { name = "ollama", specifier = "==0.6.1" },
+    { name = "pydantic", specifier = "==2.13.3" },
     { name = "pytest", specifier = "==9.0.3" },
 ]
 

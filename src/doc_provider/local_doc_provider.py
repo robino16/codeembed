@@ -5,16 +5,26 @@ from typing import Iterator, List
 from src.doc_provider.base import DocProviderBase
 from src.doc_provider.models import DocumentContent, DocumentMeta
 
+_DEFAULT_SKIP_KEYWORDS = [
+    "venv",
+    "pytest_cache",
+    "node_modules",
+    ".env",
+    ".env.local",
+    "dist",
+    "build",
+]
+
 
 class LocalDocProvider(DocProviderBase):
     def __init__(
-        self, base_path: str, supported_extensions: List[str], skip_keywords: List[str]
+        self, base_path: str, supported_file_extensions: List[str], skip_keywords: List[str]
     ) -> None:
         self._base_path = base_path
-        self._supported_extensions = [
-            ext.lower().split(".")[-1] for ext in supported_extensions
+        self._supported_file_extensions = [
+            ext.lower().split(".")[-1] for ext in supported_file_extensions
         ]
-        self._skip_keywords = [kw.lower() for kw in skip_keywords]
+        self._skip_keywords = [kw.lower() for kw in skip_keywords] + _DEFAULT_SKIP_KEYWORDS
 
     def iter(self) -> Iterator[DocumentMeta]:
 
@@ -25,7 +35,7 @@ class LocalDocProvider(DocProviderBase):
                 file_path = os.path.join(root, file_name)
 
                 ext = file_path.split(".")[-1]
-                if ext.lower() not in self._supported_extensions:
+                if ext.lower() not in self._supported_file_extensions:
                     continue
 
                 # we skip here to avoid loading unecessary documents
