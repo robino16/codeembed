@@ -1,7 +1,7 @@
-import logging
+﻿import logging
 
-from src.bootstrap.services import get_embedder_service, get_search_service
-from src.setup_logger import setup_logger
+from codeprism.bootstrap.services import get_embedder_service, get_search_service
+from codeprism.setup_logger import setup_logger
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,9 @@
-import asyncio
+﻿import asyncio
 from contextlib import asynccontextmanager, suppress
 
 from mcp.server.fastmcp import FastMCP
 
-from src.bootstrap.services import embed_loop, get_search_service
+from codeprism.bootstrap.services import embed_loop, get_search_service
 
 
 @asynccontextmanager

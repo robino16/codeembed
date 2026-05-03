@@ -1,10 +1,10 @@
-import os
+﻿import os
 from datetime import datetime, timezone
 import subprocess
 from typing import Iterator, List
 
-from src.doc_provider.base import DocProviderBase
-from src.doc_provider.models import DocumentContent, DocumentMeta
+from codeprism.doc_provider.base import DocProviderBase
+from codeprism.doc_provider.models import DocumentContent, DocumentMeta
 
 
 def _get_git_files(base_path: str) -> set[str]:

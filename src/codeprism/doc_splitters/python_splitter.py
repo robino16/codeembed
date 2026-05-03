@@ -1,7 +1,7 @@
-from typing import List
+﻿from typing import List
 
-from src.doc_splitters.base import FileSplitterBase
-from src.doc_splitters.models import FileSegment, SegmentType
+from codeprism.doc_splitters.base import FileSplitterBase
+from codeprism.doc_splitters.models import FileSegment, SegmentType
 
 
 def _extract_generic(file_content: str, segment_type: SegmentType) -> List[FileSegment]:

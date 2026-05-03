@@ -1,9 +1,9 @@
-from typing import Dict, List, Type, TypeVar
+﻿from typing import Dict, List, Type, TypeVar
 
 import ollama
 from pydantic import BaseModel
 
-from src.llm.base import LLMServiceBase
+from codeprism.llm.base import LLMServiceBase
 
 T = TypeVar("T", bound=BaseModel)
 

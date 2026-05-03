@@ -1,12 +1,12 @@
-from datetime import datetime
+﻿from datetime import datetime
 from typing import Dict, Iterator, List, Optional, Type, TypeVar
 from uuid import UUID
 
 import chromadb
 from chromadb.api.types import Metadata, QueryResult
 
-from src.vector_db.base import VectorDbBase
-from src.vector_db.models import Chunk
+from codeprism.vector_db.base import VectorDbBase
+from codeprism.vector_db.models import Chunk
 
 T = TypeVar("T")
 

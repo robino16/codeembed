@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from datetime import datetime
 
-from src.utils.checksum_utils import string_to_sha256
+from codeprism.utils.checksum_utils import string_to_sha256
 
 
 @dataclass

@@ -1,10 +1,10 @@
-from datetime import datetime, timedelta
+﻿from datetime import datetime, timedelta
 from typing import Dict, List, Set, Tuple
 from uuid import UUID
 
-from src.doc_provider.base import DocProviderBase
-from src.vector_db.base import VectorDbBase
-from src.utils.time_utils import utc_now
+from codeprism.doc_provider.base import DocProviderBase
+from codeprism.vector_db.base import VectorDbBase
+from codeprism.utils.time_utils import utc_now
 
 
 class DeltaComputer:

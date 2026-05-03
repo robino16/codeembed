@@ -1,7 +1,7 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
 from typing import List
 
-from src.doc_splitters.models import FileSegment
+from codeprism.doc_splitters.models import FileSegment
 
 
 class FileSplitterBase(ABC):

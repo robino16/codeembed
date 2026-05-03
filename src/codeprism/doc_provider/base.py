@@ -1,7 +1,7 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
 from typing import Iterator
 
-from src.doc_provider.models import DocumentContent, DocumentMeta
+from codeprism.doc_provider.models import DocumentContent, DocumentMeta
 
 
 class DocProviderBase(ABC):

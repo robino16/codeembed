@@ -1,15 +1,15 @@
-import asyncio
+﻿import asyncio
 from functools import lru_cache
 import logging
 import os
 import tomllib
 
-from src.config.models import CodePrismConfig
-from src.doc_embedder.doc_embedder import DocEmbedder
-from src.doc_provider.local_doc_provider import LocalDocProvider
-from src.llm.ollama_adapter import OllamaLLMService
-from src.doc_search_service.doc_search_service import DocSearchService
-from src.vector_db.chromadb_adapter import ChromaDbAdapter
+from codeprism.config.models import CodePrismConfig
+from codeprism.doc_embedder.doc_embedder import DocEmbedder
+from codeprism.doc_provider.local_doc_provider import LocalDocProvider
+from codeprism.llm.ollama_adapter import OllamaLLMService
+from codeprism.doc_search_service.doc_search_service import DocSearchService
+from codeprism.vector_db.chromadb_adapter import ChromaDbAdapter
 
 logger = logging.getLogger(__name__)
 

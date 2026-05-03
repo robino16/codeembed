@@ -43,13 +43,18 @@ codeprism serve
 ```
 
 The code embedder will apply the `.gitignore` in the root folder.
-By default it also ignores: `node_modules/`, `venv/`, `.venv/`, `.env`, `.env.local`, `build/` and `dist/`.
-
 ## Contributing
+
+### Setup
+
+Install the package in editable mode so imports resolve correctly:
+
+```bash
+uv pip install -e .
+```
 
 ### Running Tests
 
 ```bash
-$env:PYTHONPATH="."
 uv run pytest tests
 ```

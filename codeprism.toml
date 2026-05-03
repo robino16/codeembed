@@ -1,0 +1,4 @@
+[codeprism]
+llm_model = "gpt-oss:20b"
+debounce = 10
+sleep_interval = 60
