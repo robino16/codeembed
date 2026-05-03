@@ -1,17 +1,19 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Set, Tuple
 from uuid import UUID
 
 from src.doc_provider.base import DocProviderBase
 from src.vector_db.base import VectorDbBase
+from utils.time_utils import utc_now
 
 
 class DeltaComputer:
     """Figures out which files to add, delete or update."""
 
-    def __init__(self, doc_provider: DocProviderBase, vector_db: VectorDbBase) -> None:
+    def __init__(self, doc_provider: DocProviderBase, vector_db: VectorDbBase, debounce_seconds: int = 10) -> None:
         self._doc_provider = doc_provider
         self._vector_db = vector_db
+        self._debounce_seconds = debounce_seconds
 
     def compute_deltas(self) -> Tuple[Set[UUID], Set[str]]:
         """
@@ -46,12 +48,17 @@ class DeltaComputer:
 
         # Figure out which files have been added or modified.
         for file_path, modified_at in current.items():
+            if modified_at > utc_now() - timedelta(seconds=self._debounce_seconds):
+                # We skip files modified within the last N seconds
+                continue
+
             if file_path not in old or old[file_path] < modified_at:
+                # file updated or added
                 file_paths_to_update.add(file_path)
 
-            # We delete all old chunks for any modified files.
-            for chunk_id in file_path_to_chunk_ids.get(file_path, []):
-                chunk_ids_to_delete.add(chunk_id)
+                # We delete all old chunks for any modified files.
+                for chunk_id in file_path_to_chunk_ids.get(file_path, []):
+                    chunk_ids_to_delete.add(chunk_id)
 
         # Figure out which files have been removed.
         for file_path in old:
