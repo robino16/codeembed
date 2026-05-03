@@ -2,6 +2,9 @@ import logging
 
 
 def setup_logger(level: int = logging.INFO) -> logging.Logger:
+    
+    # TODO: Add local file logger.
+
     logger = logging.getLogger()
 
     # Avoid duplicate handlers if called multiple times
