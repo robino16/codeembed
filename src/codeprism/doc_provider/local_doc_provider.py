@@ -36,6 +36,9 @@ class LocalDocProvider(DocProviderBase):
             if ext.lower() not in self._supported_file_extensions:
                 continue
 
+            if file_path.endswith("__init__.py"):
+                continue
+
             try:
                 modified_ts = os.path.getmtime(file_path)
                 modified_at = datetime.fromtimestamp(modified_ts, tz=timezone.utc)

@@ -133,6 +133,12 @@ class DocEmbedder:
                         file_sha256_checksum=doc.sha256_checksum,
                     )
                 )
+            if not chunks:
+                logger.warning(
+                    f"No chunks generated for file '{file}'. Skipping embedding for this file."
+                )
+                num_skipped += 1
+                continue
             logger.info(f"Saving {len(chunks)} chunks to vector database.")
             self._vector_db.add_chunks(chunks)
             num_processed += 1

@@ -20,9 +20,9 @@ Then:
 codeprism init
 ```
 
-Just to make sure `.gitignore` excludes new folders.
-
 The current codebase folder will automatically be embedded when running the MCP server.
+
+**NOT IMPLEMENTED YET**
 
 You can then add extra codebases as context with:
 
@@ -42,7 +42,16 @@ Then start the MCP server with:
 codeprism serve
 ```
 
+This will automatically embed your codebase in the background using Ollama.
+
+You can also manually embed the codebase with:
+
+```bash
+codeprism embed
+```
+
 The code embedder will apply the `.gitignore` in the root folder.
+
 ## Contributing
 
 ### Setup

@@ -4,6 +4,8 @@ import subprocess
 
 import typer
 
+from codeprism.setup_logger import setup_logger
+
 app = typer.Typer()
 
 _CODEPRISM_DIR = ".codeprism"
@@ -149,4 +151,34 @@ def init():
 @app.command()
 def serve():
     """Start the MCP server."""
-    ...
+    if not os.path.isfile(_CONFIG_FILE):
+        typer.echo("Error: 'codeprism.toml' not found. Run 'codeprism init' first.")
+        raise typer.Exit(1)
+
+    setup_logger()
+    _check_ollama_installed()
+    _check_ollama_running()
+
+    from codeprism.mcp_server import mcp
+    typer.echo("Starting CodePrism MCP server...")
+    mcp.run(transport="streamable-http")
+
+
+@app.command()
+def embed():
+    """Embed codebase into the vector database."""
+    if not os.path.isfile(_CONFIG_FILE):
+        typer.echo("Error: 'codeprism.toml' not found. Run 'codeprism init' first.")
+        raise typer.Exit(1)
+
+    setup_logger()
+    _check_ollama_installed()
+    _check_ollama_running()
+
+    typer.echo("Embedding codebase...\n")
+
+    from codeprism.bootstrap.services import get_embedder_service
+    embedder = get_embedder_service()
+    embedder.embed_codebase()
+
+    typer.echo("\nDone.")
