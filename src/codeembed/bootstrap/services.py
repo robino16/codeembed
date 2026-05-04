@@ -1,14 +1,14 @@
-﻿import asyncio
-from functools import lru_cache
+import asyncio
 import logging
 import os
 import tomllib
+from functools import lru_cache
 
 from codeembed.config.models import CodeEmbedConfig
 from codeembed.doc_embedder.doc_embedder import DocEmbedder
 from codeembed.doc_provider.local_doc_provider import LocalDocProvider
-from codeembed.llm.ollama_adapter import OllamaLLMService
 from codeembed.doc_search_service.doc_search_service import DocSearchService
+from codeembed.llm.ollama_adapter import OllamaLLMService
 from codeembed.vector_db.chromadb_adapter import ChromaDbAdapter
 
 logger = logging.getLogger(__name__)
@@ -55,11 +55,7 @@ def get_embedder_service() -> DocEmbedder:
     vector_db = ChromaDbAdapter(collection_name="codebase")
     llm_service = OllamaLLMService()
     embedder = DocEmbedder(
-        doc_provider,
-        vector_db,
-        llm_service,
-        llm_model=config.llm_model,
-        debounce_seconds=config.debounce
+        doc_provider, vector_db, llm_service, llm_model=config.llm_model, debounce_seconds=config.debounce
     )
     return embedder
 

@@ -2,7 +2,6 @@ import logging
 import os
 from logging.handlers import TimedRotatingFileHandler
 
-
 _LOG_DIR = ".codeembed/logs"
 _LOG_FILE = os.path.join(_LOG_DIR, "codeembed.log")
 
@@ -27,9 +26,7 @@ def setup_logger(level: int = logging.INFO) -> logging.Logger:
     logger.addHandler(stream_handler)
 
     os.makedirs(_LOG_DIR, exist_ok=True)
-    file_handler = TimedRotatingFileHandler(
-        _LOG_FILE, when="midnight", backupCount=7, encoding="utf-8"
-    )
+    file_handler = TimedRotatingFileHandler(_LOG_FILE, when="midnight", backupCount=7, encoding="utf-8")
     file_handler.setLevel(level)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)

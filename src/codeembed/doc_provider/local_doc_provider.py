@@ -1,6 +1,6 @@
-﻿import os
-from datetime import datetime, timezone
+import os
 import subprocess
+from datetime import datetime, timezone
 from typing import Iterator, List
 
 from codeembed.doc_provider.base import DocProviderBase
@@ -18,20 +18,15 @@ def _get_git_files(base_path: str) -> set[str]:
 
 
 class LocalDocProvider(DocProviderBase):
-    def __init__(
-        self, base_path: str, supported_file_extensions: List[str]
-    ) -> None:
+    def __init__(self, base_path: str, supported_file_extensions: List[str]) -> None:
         self._base_path = base_path
-        self._supported_file_extensions = [
-            ext.lower().split(".")[-1] for ext in supported_file_extensions
-        ]
+        self._supported_file_extensions = [ext.lower().split(".")[-1] for ext in supported_file_extensions]
 
     def iter(self) -> Iterator[DocumentMeta]:
 
         file_paths = _get_git_files(self._base_path)
 
         for file_path in file_paths:
-
             ext = file_path.split(".")[-1]
             if ext.lower() not in self._supported_file_extensions:
                 continue

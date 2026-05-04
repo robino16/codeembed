@@ -4,9 +4,9 @@ from uuid import uuid4
 from codeembed.delta_computer.delta_computer import DeltaComputer
 from codeembed.doc_provider.base import DocProviderBase
 from codeembed.doc_provider.models import DocumentContent, DocumentMeta
+from codeembed.utils.time_utils import utc_now
 from codeembed.vector_db.base import VectorDbBase
 from codeembed.vector_db.models import Chunk
-from codeembed.utils.time_utils import utc_now
 
 
 class FakeDocProvider(DocProviderBase):

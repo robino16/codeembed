@@ -1,4 +1,4 @@
-﻿from typing import Dict, List
+from typing import Dict, List
 
 from codeembed.utils.string_utils import truncate_string
 from codeembed.vector_db.base import VectorDbBase
@@ -31,13 +31,17 @@ class DocSearchService:
         res += f"<TopN>{top_n}</TopN>\n"
         res += f"<Results chunkCount={len(chunks)} fileCount={len(chunks_by_file)}>\n"
         for file_path, chunks in chunks_by_file.items():
-            res += f"  <File path=\"{file_path}\">\n"
+            res += f'  <File path="{file_path}">\n'
             for chunk in chunks:
                 # NOTE: Consider truncating by number of tokens.
                 raw_code = chunk.raw_code if chunk.raw_code else ""
-                res += f"    <Chunk>\n"
+                res += "    <Chunk>\n"
                 res += f"      <Summary>\n{truncate_string(chunk.content, 4096)}\n      </Summary>\n"
-                res += f"      <RawCode lines=\"{chunk.line_start}-{chunk.line_end}\">\n{truncate_string(raw_code, 4096)}\n      </RawCode>\n"
+                res += (
+                    f'      <RawCode lines="{chunk.line_start}-{chunk.line_end}">\n'
+                    f"{truncate_string(raw_code, 4096)}\n"
+                    f"      </RawCode>\n"
+                )
                 res += "    </Chunk>\n"
             res += "  </File>\n"
         res += "</Results>\n"

@@ -1,10 +1,10 @@
-﻿from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Dict, List, Set, Tuple
 from uuid import UUID
 
 from codeembed.doc_provider.base import DocProviderBase
-from codeembed.vector_db.base import VectorDbBase
 from codeembed.utils.time_utils import utc_now
+from codeembed.vector_db.base import VectorDbBase
 
 
 class DeltaComputer:
@@ -36,9 +36,7 @@ class DeltaComputer:
             )
             old_checksums[chunk.file_path] = chunk.file_sha256_checksum
 
-            file_path_to_chunk_ids[chunk.file_path] = file_path_to_chunk_ids.get(
-                chunk.file_path, []
-            ) + [chunk.id]
+            file_path_to_chunk_ids[chunk.file_path] = file_path_to_chunk_ids.get(chunk.file_path, []) + [chunk.id]
 
         # Collect current modified_at in file system.
         current: Dict[str, datetime] = {}
@@ -60,7 +58,7 @@ class DeltaComputer:
                         # TODO: We should probably update modified_at in vector database
                         #       to avoid re-reading this file on every run.
                         continue
-                
+
                 # file updated or added
                 file_paths_to_update.add(file_path)
 

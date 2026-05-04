@@ -53,9 +53,15 @@ The MCP server exposes a single `search(query)` tool for semantic search over yo
 ## Contributing
 
 ```bash
-uv sync --extra dev
+uv sync
 uv pip install -e .
 claude mcp add codeembed -- uv run codeembed serve
+```
+
+Optionally add Ruff pre-commit with:
+
+```bash
+pre-commit install
 ```
 
 Run tests:
