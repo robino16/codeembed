@@ -1,56 +1,44 @@
-# CodeEmbed
+# codeembed
 
-This embeds your codebase and other codebases you need as context.
+Embeds your codebase into a local vector database and exposes it as an MCP tool, giving AI assistants like Claude Code fast semantic search over your code.
 
-Uses [CromaDB](https://github.com/chroma-core/chroma) for quick and easy local vector storage.
-Make sure you have installed [Python](python.org) and [uv](https://github.com/astral-sh/uv) (via `pip install uv`).
+Uses [ChromaDB](https://github.com/chroma-core/chroma) for local vector storage and [Ollama](https://github.com/ollama/ollama) for LLM analysis.
 
-The codebase embedder works best in combination with LLM model for code analysis and summarization.
-You can use local LLMs [Ollama](https://github.com/ollama/ollama-python).
+## Prerequisites
 
-The idea is that you do:
+- [Python](https://python.org) 3.11+
+- [uv](https://github.com/astral-sh/uv)
+- [Ollama](https://ollama.com) running locally
+
+## Installation
 
 ```bash
-uv tool install codembed
+uv tool install codeembed
 ```
 
-Then:
+## Usage
+
+**1. Initialize** (run once in your project root):
 
 ```bash
 codeembed init
 ```
 
-The current codebase folder will automatically be embedded when running the MCP server.
+Creates a `codeembed.toml` config and adds `.codeembed/` to your `.gitignore`. You'll be prompted to select an Ollama model.
 
-**NOT IMPLEMENTED YET**
-
-You can then add extra codebases as context with:
-
-```bash
-codeembed add <local-file-path>
-```
-
-or
-
-```bash
-codeembed add <github-repo-url>
-```
-
-Then start the MCP server with:
+**2. Start the MCP server:**
 
 ```bash
 codeembed serve
 ```
 
-This will automatically embed your codebase in the background using Ollama.
+This embeds your codebase in the background and starts the MCP server. Respects `.gitignore`.
 
-You can also manually embed the codebase with:
+**3. Manually re-embed** (optional):
 
 ```bash
 codeembed embed
 ```
-
-The code embedder will apply the `.gitignore` in the root folder.
 
 ## Add to Claude Code
 
@@ -58,33 +46,19 @@ The code embedder will apply the `.gitignore` in the root folder.
 claude mcp add codeembed -- uv run codeembed serve
 ```
 
-Also add `mcp__codeembed__search` to `allowedTools` in Claude's config file.
+Also add `mcp__codeembed__search` to `allowedTools` in your Claude config.
+
+The MCP server exposes a single `search(query)` tool for semantic search over your codebase.
 
 ## Contributing
 
-### Setting up local environment
-
 ```bash
 uv sync --extra dev
-```
-
-### Setup
-
-Install the package in editable mode so imports resolve correctly:
-
-```bash
 uv pip install -e .
-```
-
-Then add to Claude Code with:
-
-```bash
 claude mcp add codeembed -- uv run codeembed serve
 ```
 
-(like above).
-
-### Running Tests
+Run tests:
 
 ```bash
 uv run pytest tests
