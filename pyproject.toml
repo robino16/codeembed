@@ -1,19 +1,25 @@
 [project]
-name = "codeprism"
+name = "codeembed"
 version = "0.1.0b0"
 description = "Embeds your codebase and makes it available for quick LLM lookups via MCP."
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
-    "chromadb==1.5.8",
-    "mcp==1.26.0",
-    "ollama==0.6.1",
-    "pydantic==2.13.3",
-    "pytest==9.0.3",
+    "chromadb>=1.5,<2",
+    "mcp>=1.26,<2",
+    "ollama>=0.6,<1",
+    "pydantic>=2.13,<3"
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=9.0,<10"]
+
 [project.scripts]
-codeprism = "codeprism.cli:app"
+codeembed = "codeembed.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

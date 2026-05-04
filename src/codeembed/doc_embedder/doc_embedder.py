@@ -1,13 +1,13 @@
 ﻿import logging
 from uuid import uuid4
 
-from codeprism.delta_computer.delta_computer import DeltaComputer
-from codeprism.doc_provider.base import DocProviderBase
-from codeprism.doc_splitters.factory import DocSplitterFactory
-from codeprism.doc_splitters.models import FileSegment
-from codeprism.llm.base import LLMServiceBase
-from codeprism.vector_db.base import VectorDbBase
-from codeprism.vector_db.models import Chunk
+from codeembed.delta_computer.delta_computer import DeltaComputer
+from codeembed.doc_provider.base import DocProviderBase
+from codeembed.doc_splitters.factory import DocSplitterFactory
+from codeembed.doc_splitters.models import FileSegment
+from codeembed.llm.base import LLMServiceBase
+from codeembed.vector_db.base import VectorDbBase
+from codeembed.vector_db.models import Chunk
 
 logger = logging.getLogger(__name__)
 

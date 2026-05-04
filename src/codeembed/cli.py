@@ -4,13 +4,13 @@ import subprocess
 
 import typer
 
-from codeprism.setup_logger import setup_logger
+from codeembed.setup_logger import setup_logger
 
 app = typer.Typer()
 
-_CODEPRISM_DIR = ".codeprism"
-_CONFIG_FILE = "codeprism.toml"
-_GITIGNORE_ENTRY = ".codeprism/"
+_CODEEMBED_DIR = ".codeembed"
+_CONFIG_FILE = "codeembed.toml"
+_GITIGNORE_ENTRY = ".codeembed/"
 _DEFAULT_DEBOUNCE = 10
 _DEFAULT_SLEEP_INTERVAL = 60
 
@@ -22,8 +22,8 @@ _CURATED_MODELS = [
 
 def _ensure_gitignore() -> None:
     if not os.path.isfile(".gitignore"):
-        typer.echo("Error: No .gitignore found. Run 'codeprism init' from the root of your git repository.")
-        typer.echo("A .gitignore is required to prevent CodePrism from embedding sensitive files.")
+        typer.echo("Error: No .gitignore found. Run 'codeembed init' from the root of your git repository.")
+        typer.echo("A .gitignore is required to prevent CodeEmbed from embedding sensitive files.")
         raise typer.Exit(1)
 
     with open(".gitignore", "r", encoding="utf-8") as f:
@@ -31,20 +31,20 @@ def _ensure_gitignore() -> None:
 
     if _GITIGNORE_ENTRY not in content:
         with open(".gitignore", "a", encoding="utf-8") as f:
-            f.write(f"\n# CodePrism\n{_GITIGNORE_ENTRY}\n")
+            f.write(f"\n# CodeEmbed\n{_GITIGNORE_ENTRY}\n")
         typer.echo(f"Added '{_GITIGNORE_ENTRY}' to .gitignore.")
 
 
-def _create_codeprism_dir() -> None:
-    if not os.path.isdir(_CODEPRISM_DIR):
-        os.makedirs(_CODEPRISM_DIR)
-        typer.echo(f"Created '{_CODEPRISM_DIR}/' directory.")
+def _create_codeembed_dir() -> None:
+    if not os.path.isdir(_CODEEMBED_DIR):
+        os.makedirs(_CODEEMBED_DIR)
+        typer.echo(f"Created '{_CODEEMBED_DIR}/' directory.")
 
 
 def _check_ollama_installed() -> None:
     if shutil.which("ollama") is None:
         typer.echo("Error: Ollama is not installed or not in your PATH.")
-        typer.echo("Install it from https://ollama.com/ then re-run 'codeprism init'.")
+        typer.echo("Install it from https://ollama.com/ then re-run 'codeembed init'.")
         raise typer.Exit(1)
 
 
@@ -92,7 +92,7 @@ def _select_model(downloaded_models: list[str]) -> str:
         if index < 0 or index >= len(options):
             raise ValueError()
     except ValueError:
-        typer.echo("Invalid choice. Please re-run 'codeprism init'.")
+        typer.echo("Invalid choice. Please re-run 'codeembed init'.")
         raise typer.Exit(1)
 
     if options[index] == "custom":
@@ -115,7 +115,7 @@ def _ensure_model_downloaded(model: str, downloaded_models: list[str]) -> None:
 
 def _write_config(model: str) -> None:
     config_toml = f"""\
-[codeprism]
+[codeembed]
 llm_model = "{model}"
 debounce = {_DEFAULT_DEBOUNCE}
 sleep_interval = {_DEFAULT_SLEEP_INTERVAL}
@@ -128,15 +128,15 @@ sleep_interval = {_DEFAULT_SLEEP_INTERVAL}
 
 @app.command()
 def init():
-    """Initialize CodePrism in the current project."""
-    typer.echo("Initializing CodePrism...\n")
+    """Initialize CodeEmbed in the current project."""
+    typer.echo("Initializing CodeEmbed...\n")
 
     if os.path.isfile(_CONFIG_FILE):
         if not typer.confirm(f"'{_CONFIG_FILE}' already exists. Overwrite?", default=False):
             raise typer.Exit(0)
 
     _ensure_gitignore()
-    _create_codeprism_dir()
+    _create_codeembed_dir()
     _check_ollama_installed()
     _check_ollama_running()
 
@@ -148,22 +148,22 @@ def init():
     # TODO: Consider modifying .claude/settings.json to add our MCP server config.
     #       Just ask the user (add support for Claude Yes/No prompt).
 
-    typer.echo("\nDone. Run 'codeprism serve' to start the MCP server.")
+    typer.echo("\nDone. Run 'codeembed serve' to start the MCP server.")
 
 
 @app.command()
 def serve():
     """Start the MCP server."""
     if not os.path.isfile(_CONFIG_FILE):
-        typer.echo("Error: 'codeprism.toml' not found. Run 'codeprism init' first.")
+        typer.echo("Error: 'codeembed.toml' not found. Run 'codeembed init' first.")
         raise typer.Exit(1)
 
     setup_logger()
     _check_ollama_installed()
     _check_ollama_running()
 
-    from codeprism.mcp_server import mcp
-    typer.echo("Starting CodePrism MCP server...")
+    from codeembed.mcp_server import mcp
+    typer.echo("Starting CodeEmbed MCP server...")
     mcp.run(transport="stdio")
 
 
@@ -171,7 +171,7 @@ def serve():
 def embed():
     """Embed codebase into the vector database."""
     if not os.path.isfile(_CONFIG_FILE):
-        typer.echo("Error: 'codeprism.toml' not found. Run 'codeprism init' first.")
+        typer.echo("Error: 'codeembed.toml' not found. Run 'codeembed init' first.")
         raise typer.Exit(1)
 
     setup_logger()
@@ -180,7 +180,7 @@ def embed():
 
     typer.echo("Embedding codebase...\n")
 
-    from codeprism.bootstrap.services import get_embedder_service
+    from codeembed.bootstrap.services import get_embedder_service
     embedder = get_embedder_service()
     embedder.embed_codebase()
 

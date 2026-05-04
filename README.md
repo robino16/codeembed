@@ -1,4 +1,4 @@
-# CodePrism
+# CodeEmbed
 
 This embeds your codebase and other codebases you need as context.
 
@@ -11,13 +11,13 @@ You can use local LLMs [Ollama](https://github.com/ollama/ollama-python).
 The idea is that you do:
 
 ```bash
-uv tool install codeprism
+uv tool install codembed
 ```
 
 Then:
 
 ```bash
-codeprism init
+codeembed init
 ```
 
 The current codebase folder will automatically be embedded when running the MCP server.
@@ -27,19 +27,19 @@ The current codebase folder will automatically be embedded when running the MCP 
 You can then add extra codebases as context with:
 
 ```bash
-codeprism add <local-file-path>
+codeembed add <local-file-path>
 ```
 
 or
 
 ```bash
-codeprism add <github-repo-url>
+codeembed add <github-repo-url>
 ```
 
 Then start the MCP server with:
 
 ```bash
-codeprism serve
+codeembed serve
 ```
 
 This will automatically embed your codebase in the background using Ollama.
@@ -47,7 +47,7 @@ This will automatically embed your codebase in the background using Ollama.
 You can also manually embed the codebase with:
 
 ```bash
-codeprism embed
+codeembed embed
 ```
 
 The code embedder will apply the `.gitignore` in the root folder.
@@ -55,12 +55,18 @@ The code embedder will apply the `.gitignore` in the root folder.
 ## Add to Claude Code
 
 ```bash
-claude mcp add codeprism -- uv run codeprism serve
+claude mcp add codeembed -- uv run codeembed serve
 ```
 
-Also add `mcp__codeprism__search` to `allowedTools` in Claude's config file.
+Also add `mcp__codeembed__search` to `allowedTools` in Claude's config file.
 
 ## Contributing
+
+### Setting up local environment
+
+```bash
+uv sync --extra dev
+```
 
 ### Setup
 
@@ -69,6 +75,14 @@ Install the package in editable mode so imports resolve correctly:
 ```bash
 uv pip install -e .
 ```
+
+Then add to Claude Code with:
+
+```bash
+claude mcp add codeembed -- uv run codeembed serve
+```
+
+(like above).
 
 ### Running Tests
 

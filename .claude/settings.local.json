@@ -1,5 +1,5 @@
 {
   "permissions": {
-    "allow": ["mcp__codeprism__search"]
+    "allow": ["mcp__codeembed__search"]
   }
 }

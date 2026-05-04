@@ -4,12 +4,12 @@ import logging
 import os
 import tomllib
 
-from codeprism.config.models import CodePrismConfig
-from codeprism.doc_embedder.doc_embedder import DocEmbedder
-from codeprism.doc_provider.local_doc_provider import LocalDocProvider
-from codeprism.llm.ollama_adapter import OllamaLLMService
-from codeprism.doc_search_service.doc_search_service import DocSearchService
-from codeprism.vector_db.chromadb_adapter import ChromaDbAdapter
+from codeembed.config.models import CodeEmbedConfig
+from codeembed.doc_embedder.doc_embedder import DocEmbedder
+from codeembed.doc_provider.local_doc_provider import LocalDocProvider
+from codeembed.llm.ollama_adapter import OllamaLLMService
+from codeembed.doc_search_service.doc_search_service import DocSearchService
+from codeembed.vector_db.chromadb_adapter import ChromaDbAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -28,16 +28,16 @@ def get_search_service() -> DocSearchService:
 
 
 @lru_cache(maxsize=1)
-def get_config() -> CodePrismConfig:
+def get_config() -> CodeEmbedConfig:
     if os.path.isfile(_CONFIG_FILE_PATH):
         try:
-            with open("codeprism.toml", "rb") as f:
+            with open(_CONFIG_FILE_PATH, "rb") as f:
                 data = tomllib.load(f)
-            config = CodePrismConfig(**data["codeprism"])
+            config = CodeEmbedConfig(**data["codeembed"])
             return config
         except Exception:
             pass
-    default_config = CodePrismConfig(
+    default_config = CodeEmbedConfig(
         llm_model=_DEFAULT_LLM_MODEL,
         debounce=_DEFAULT_DEBOUNCE,
         sleep_interval=_DEFAULT_SLEEP_INTERVAL,

@@ -3,8 +3,8 @@ import os
 from logging.handlers import TimedRotatingFileHandler
 
 
-_LOG_DIR = ".codeprism/logs"
-_LOG_FILE = os.path.join(_LOG_DIR, "codeprism.log")
+_LOG_DIR = ".codeembed/logs"
+_LOG_FILE = os.path.join(_LOG_DIR, "codeembed.log")
 
 
 def setup_logger(level: int = logging.INFO) -> logging.Logger:

@@ -5,8 +5,8 @@ from uuid import UUID
 import chromadb
 from chromadb.api.types import Metadata, QueryResult
 
-from codeprism.vector_db.base import VectorDbBase
-from codeprism.vector_db.models import Chunk
+from codeembed.vector_db.base import VectorDbBase
+from codeembed.vector_db.models import Chunk
 
 T = TypeVar("T")
 

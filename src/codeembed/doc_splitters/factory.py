@@ -1,7 +1,7 @@
 ﻿from typing import Optional
 
-from codeprism.doc_splitters.base import FileSplitterBase
-from codeprism.doc_splitters.python_splitter import PythonFileSplitter
+from codeembed.doc_splitters.base import FileSplitterBase
+from codeembed.doc_splitters.python_splitter import PythonFileSplitter
 
 
 class DocSplitterFactory:

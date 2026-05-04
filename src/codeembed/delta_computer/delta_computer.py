@@ -2,9 +2,9 @@
 from typing import Dict, List, Set, Tuple
 from uuid import UUID
 
-from codeprism.doc_provider.base import DocProviderBase
-from codeprism.vector_db.base import VectorDbBase
-from codeprism.utils.time_utils import utc_now
+from codeembed.doc_provider.base import DocProviderBase
+from codeembed.vector_db.base import VectorDbBase
+from codeembed.utils.time_utils import utc_now
 
 
 class DeltaComputer:

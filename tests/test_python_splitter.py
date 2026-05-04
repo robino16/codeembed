@@ -1,4 +1,4 @@
-﻿from codeprism.doc_splitters.python_splitter import PythonFileSplitter
+﻿from codeembed.doc_splitters.python_splitter import PythonFileSplitter
 
 
 def test_detects_class():

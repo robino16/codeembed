@@ -1,8 +1,8 @@
 ﻿from typing import Dict, List
 
-from codeprism.utils.string_utils import truncate_string
-from codeprism.vector_db.base import VectorDbBase
-from codeprism.vector_db.models import Chunk
+from codeembed.utils.string_utils import truncate_string
+from codeembed.vector_db.base import VectorDbBase
+from codeembed.vector_db.models import Chunk
 
 
 class DocSearchService:

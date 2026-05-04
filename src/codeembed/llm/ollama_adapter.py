@@ -3,7 +3,7 @@
 import ollama
 from pydantic import BaseModel
 
-from codeprism.llm.base import LLMServiceBase
+from codeembed.llm.base import LLMServiceBase
 
 T = TypeVar("T", bound=BaseModel)
 

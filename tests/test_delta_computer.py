@@ -1,12 +1,12 @@
 from datetime import timedelta
 from uuid import uuid4
 
-from codeprism.delta_computer.delta_computer import DeltaComputer
-from codeprism.doc_provider.base import DocProviderBase
-from codeprism.doc_provider.models import DocumentContent, DocumentMeta
-from codeprism.vector_db.base import VectorDbBase
-from codeprism.vector_db.models import Chunk
-from codeprism.utils.time_utils import utc_now
+from codeembed.delta_computer.delta_computer import DeltaComputer
+from codeembed.doc_provider.base import DocProviderBase
+from codeembed.doc_provider.models import DocumentContent, DocumentMeta
+from codeembed.vector_db.base import VectorDbBase
+from codeembed.vector_db.models import Chunk
+from codeembed.utils.time_utils import utc_now
 
 
 class FakeDocProvider(DocProviderBase):

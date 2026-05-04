@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class CodePrismConfig:
+class CodeEmbedConfig:
     llm_model: str
     debounce: int
     sleep_interval: int

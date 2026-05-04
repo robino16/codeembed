@@ -2,7 +2,7 @@
 from typing import Dict, Iterator, List, Optional
 from uuid import UUID
 
-from codeprism.vector_db.models import Chunk
+from codeembed.vector_db.models import Chunk
 
 
 class VectorDbBase(ABC):
