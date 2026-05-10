@@ -14,7 +14,7 @@ from codeembed.vector_db.chromadb_adapter import ChromaDbAdapter
 logger = logging.getLogger(__name__)
 
 _SUPPORTED_FILE_EXTENSIONS = ["py"]
-_CONFIG_FILE_PATH = "codeprism.toml"
+_CONFIG_FILE_PATH = "codeembed.toml"
 _DEFAULT_LLM_MODEL = "gpt-oss:20b"
 _DEFAULT_DEBOUNCE = 10
 _DEFAULT_SLEEP_INTERVAL = 60

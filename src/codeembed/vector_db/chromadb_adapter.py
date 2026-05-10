@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 from typing import Dict, Iterator, List, Optional, Type, TypeVar
 from uuid import UUID
 
@@ -14,7 +14,7 @@ T = TypeVar("T")
 class ChromaDbAdapter(VectorDbBase):
     def __init__(self, collection_name: str) -> None:
         # TODO: Support adding EmbeddingServiceBase and replacing ChromaDB default embedder.
-        self._client = chromadb.PersistentClient(path="./.codeprism")
+        self._client = chromadb.PersistentClient(path="./.codeembed")
         self._collection = self._client.get_or_create_collection(collection_name)
 
     def add_chunks(self, chunks: List[Chunk]) -> None:
@@ -112,7 +112,7 @@ class ChromaDbAdapter(VectorDbBase):
                     line_start=line_start,
                     line_end=line_end,
                     raw_code=raw_code,
-                    file_sha256_checksum=file_sha256_checksum
+                    file_sha256_checksum=file_sha256_checksum,
                 )
 
             offset += limit

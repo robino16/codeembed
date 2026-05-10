@@ -50,6 +50,15 @@ Also add `mcp__codeembed__search` to `allowedTools` in your Claude config.
 
 The MCP server exposes a single `search(query)` tool for semantic search over your codebase.
 
+It appears you need to run:
+
+```bash
+codeembed serve
+claude
+```
+
+in order to make this work? Which makes little sense.
+
 ## Contributing
 
 ```bash
