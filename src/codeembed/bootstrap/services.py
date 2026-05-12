@@ -4,19 +4,12 @@ import os
 import tomllib
 from functools import lru_cache
 
-from azure.identity import (
-    DefaultAzureCredential,
-    get_bearer_token_provider,
-)
-from openai import AzureOpenAI, OpenAI
-
 from codeembed.config.models import CodeEmbedConfig
 from codeembed.doc_embedder.doc_embedder import DocEmbedder
 from codeembed.doc_provider.local_doc_provider import LocalDocProvider
 from codeembed.doc_search_service.doc_search_service import DocSearchService
 from codeembed.llm.base import LLMServiceBase
 from codeembed.llm.ollama_adapter import OllamaLLMService
-from codeembed.llm.openai_adapter import OpenAILLMService
 from codeembed.vector_db.chromadb_adapter import ChromaDbAdapter
 
 logger = logging.getLogger(__name__)
@@ -26,7 +19,7 @@ _CONFIG_FILE_PATH = "codeembed.toml"
 _DEFAULT_LLM_MODEL = "gpt-oss:20b"
 _DEFAULT_DEBOUNCE = 10
 _DEFAULT_SLEEP_INTERVAL = 60
-_DEFAULT_OPENAI_API_VERSION = "2024-10-21"  # TODO: Verify that this is a valid and working API version.
+_DEFAULT_OPENAI_API_VERSION = "2025-01-01-preview"
 
 
 @lru_cache(maxsize=1)
@@ -69,6 +62,16 @@ def get_llm_service() -> LLMServiceBase:
     #
     if config.provider != "openai":
         raise ValueError(f"Unsupported LLM provider: {config.provider}")
+
+    try:
+        from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+        from openai import AzureOpenAI, OpenAI
+
+        from codeembed.llm.openai_adapter import OpenAILLMService
+    except ImportError as e:
+        raise ImportError(
+            "OpenAI provider requires optional dependencies. Install them with:\n  uv tool install 'codeembed[openai]'"
+        ) from e
 
     #
     # Explicit config env-var overrides

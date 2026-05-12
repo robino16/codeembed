@@ -14,8 +14,14 @@ Uses [ChromaDB](https://github.com/chroma-core/chroma) for local vector storage 
 
 ## Installation
 
+**With Ollama:**
 ```bash
 uv tool install codeembed
+```
+
+**With OpenAI / Azure OpenAI:**
+```bash
+uv tool install 'codeembed[openai]'
 ```
 
 ## Usage
