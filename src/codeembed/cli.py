@@ -1,9 +1,11 @@
 import os
 import shutil
 import subprocess
+from typing import Literal
 
 import typer
 
+from codeembed.bootstrap.services import get_config
 from codeembed.setup_logger import setup_logger
 
 app = typer.Typer()
@@ -45,6 +47,15 @@ def _check_ollama_installed() -> None:
     if shutil.which("ollama") is None:
         typer.echo("Error: Ollama is not installed or not in your PATH.")
         typer.echo("Install it from https://ollama.com/ then re-run 'codeembed init'.")
+        raise typer.Exit(1)
+
+
+def _check_ollama_model_is_available(model: str) -> None:
+    downloaded_models = _get_downloaded_models()
+    if model not in downloaded_models:
+        typer.echo(f"Error: Ollama model '{model}' is not available.")
+        typer.echo(f"Download it with: ollama pull {model}")
+        # Alternatively give option to download now.
         raise typer.Exit(1)
 
 
@@ -101,6 +112,38 @@ def _select_model(downloaded_models: list[str]) -> str:
     return options[index]
 
 
+def _select_provider() -> Literal["ollama", "openai"]:
+    typer.echo("\nSelect an LLM provider for code summarization:\n")
+
+    is_ollama_installed = shutil.which("ollama") is not None
+    if is_ollama_installed:
+        result = subprocess.run(["ollama", "list"], capture_output=True, text=True)
+        is_ollama_running = result.returncode == 0
+    else:
+        is_ollama_running = False
+
+    ollama_status = "[running]" if is_ollama_running else "[not running]" if is_ollama_installed else "[not installed]"
+
+    typer.echo("  1. ollama " + ollama_status)
+    typer.echo("  2. openai")
+
+    raw = typer.prompt("Choice (1-2)")
+
+    try:
+        index = int(raw) - 1
+        if index < 0 or index >= 2:
+            raise ValueError()
+    except ValueError:
+        typer.echo("Invalid choice. Please re-run 'codeembed init'.")
+        raise typer.Exit(1)
+
+    if index == 0:
+        return "ollama"
+    elif index == 1:
+        return "openai"
+    raise ValueError("Invalid index")  # should never happen
+
+
 def _ensure_model_downloaded(model: str, downloaded_models: list[str]) -> None:
     if model in downloaded_models:
         return
@@ -113,13 +156,17 @@ def _ensure_model_downloaded(model: str, downloaded_models: list[str]) -> None:
         typer.echo(f"Skipping. You can pull it later with: ollama pull {model}")
 
 
-def _write_config(model: str) -> None:
+def _write_config(model: str, provider: Literal["ollama", "openai"], env_var_path: str | None = None) -> None:
     config_toml = f"""\
 [codeembed]
 llm_model = "{model}"
+provider = "{provider}"
 debounce = {_DEFAULT_DEBOUNCE}
 sleep_interval = {_DEFAULT_SLEEP_INTERVAL}
 """
+    if env_var_path:
+        config_toml += f'env_var_path = "{env_var_path}"\n'
+
     with open(_CONFIG_FILE, "w", encoding="utf-8") as f:
         f.write(config_toml)
 
@@ -135,15 +182,31 @@ def init():
         if not typer.confirm(f"'{_CONFIG_FILE}' already exists. Overwrite?", default=False):
             raise typer.Exit(0)
 
+    env_var_path = typer.prompt(
+        "Do you have a .env file path? (optional, press Enter to skip)", default="", show_default=False
+    )
+    if env_var_path:
+        if not os.path.isfile(env_var_path):
+            typer.echo(f"Error: File '{env_var_path}' not found.")
+            raise typer.Exit(1)
+        else:
+            from dotenv import load_dotenv
+
+            load_dotenv(env_var_path)
+
     _ensure_gitignore()
     _create_codeembed_dir()
-    _check_ollama_installed()
-    _check_ollama_running()
+
+    provider = _select_provider()
+
+    if provider == "ollama":
+        _check_ollama_installed()
+        _check_ollama_running()
 
     downloaded_models = _get_downloaded_models()
     model = _select_model(downloaded_models)
     _ensure_model_downloaded(model, downloaded_models)
-    _write_config(model)
+    _write_config(model, provider, env_var_path)
 
     # TODO: Consider modifying .claude/settings.json to add our MCP server config.
     #       Just ask the user (add support for Claude Yes/No prompt).
@@ -158,11 +221,25 @@ def serve():
         typer.echo("Error: 'codeembed.toml' not found. Run 'codeembed init' first.")
         raise typer.Exit(1)
 
+    config = get_config()
+
+    if config.env_var_path:
+        from dotenv import load_dotenv
+
+        if not os.path.isfile(config.env_var_path):
+            typer.echo(f"Error: Environment variable file '{config.env_var_path}' not found.")
+            raise typer.Exit(1)
+        load_dotenv(config.env_var_path)
+
     setup_logger()
-    _check_ollama_installed()
-    _check_ollama_running()
+
+    if config.provider == "ollama":
+        _check_ollama_installed()
+        _check_ollama_running()
+        _check_ollama_model_is_available(config.llm_model)
 
     from codeembed.mcp_server import mcp
+
     typer.echo("Starting CodeEmbed MCP server...")
     mcp.run(transport="stdio")
 
@@ -174,13 +251,27 @@ def embed():
         typer.echo("Error: 'codeembed.toml' not found. Run 'codeembed init' first.")
         raise typer.Exit(1)
 
+    config = get_config()
+
+    if config.env_var_path:
+        from dotenv import load_dotenv
+
+        if not os.path.isfile(config.env_var_path):
+            typer.echo(f"Error: Environment variable file '{config.env_var_path}' not found.")
+            raise typer.Exit(1)
+        load_dotenv(config.env_var_path)
+
     setup_logger()
-    _check_ollama_installed()
-    _check_ollama_running()
+
+    if config.provider == "ollama":
+        _check_ollama_installed()
+        _check_ollama_running()
+        _check_ollama_model_is_available(config.llm_model)
 
     typer.echo("Embedding codebase...\n")
 
     from codeembed.bootstrap.services import get_embedder_service
+
     embedder = get_embedder_service()
     embedder.embed_codebase()
 

@@ -8,7 +8,7 @@ from azure.identity import (
     DefaultAzureCredential,
     get_bearer_token_provider,
 )
-from openai import AzureOpenAI
+from openai import AzureOpenAI, OpenAI
 
 from codeembed.config.models import CodeEmbedConfig
 from codeembed.doc_embedder.doc_embedder import DocEmbedder
@@ -57,35 +57,88 @@ def get_config() -> CodeEmbedConfig:
 @lru_cache(maxsize=1)
 def get_llm_service() -> LLMServiceBase:
     config = get_config()
+
+    #
+    # Ollama
+    #
     if config.provider == "ollama":
         return OllamaLLMService()
-    elif config.provider == "openai":
-        from openai import OpenAI
 
-        endpoint = config.llm_endpoint or None
+    #
+    # OpenAI-compatible providers
+    #
+    if config.provider != "openai":
+        raise ValueError(f"Unsupported LLM provider: {config.provider}")
 
-        api_key = os.getenv(config.llm_api_key_env_var) if config.llm_api_key_env_var else os.getenv("OPENAI_API_KEY")
+    #
+    # Explicit config env-var overrides
+    #
+    custom_endpoint = os.getenv(config.llm_api_endpoint_env_var) if config.llm_api_endpoint_env_var else None
 
-        # Standard OpenAI API key flow
-        if api_key and not endpoint:
-            client = OpenAI()
-            return OpenAILLMService(client)
+    custom_api_key = os.getenv(config.llm_api_key_env_var) if config.llm_api_key_env_var else None
 
-        # Azure OpenAI with API key
-        if endpoint and api_key:
-            client = AzureOpenAI(
-                azure_endpoint=endpoint,
-                api_key=api_key,
-                api_version=_DEFAULT_OPENAI_API_VERSION,
-            )
+    #
+    # Generic OpenAI-compatible configuration
+    #
+    openai_api_key = custom_api_key or os.getenv("OPENAI_API_KEY")
 
-            return OpenAILLMService(client)
+    openai_base_url = custom_endpoint or os.getenv("OPENAI_BASE_URL")
 
-        if not endpoint:
-            raise ValueError("Unable to configure OpenAI client. Provide API key or Azure endpoint.")
+    #
+    # Azure OpenAI configuration
+    #
+    azure_openai_endpoint = custom_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
 
-        # Azure OpenAI with RBAC / Entra ID
-        # User should have done `az login` in a terminal for easier auth experience.
+    azure_openai_api_key = custom_api_key or os.getenv("AZURE_OPENAI_API_KEY")
+
+    #
+    # ----------------------------------------------------------
+    # Standard OpenAI or OpenAI-compatible endpoint
+    #
+    # Examples:
+    # - OpenAI cloud
+    # - vLLM
+    # - LM Studio
+    # - Ollama OpenAI shim
+    # - OpenRouter
+    # - local gateways
+    # ----------------------------------------------------------
+    #
+    if openai_api_key:
+        client = OpenAI(
+            api_key=openai_api_key,
+            base_url=openai_base_url,
+        )
+
+        return OpenAILLMService(client)
+
+    #
+    # ----------------------------------------------------------
+    # Azure OpenAI with API key
+    # ----------------------------------------------------------
+    #
+    if azure_openai_endpoint and azure_openai_api_key:
+        client = AzureOpenAI(
+            azure_endpoint=azure_openai_endpoint,
+            api_key=azure_openai_api_key,
+            api_version=_DEFAULT_OPENAI_API_VERSION,
+        )
+
+        return OpenAILLMService(client)
+
+    #
+    # ----------------------------------------------------------
+    # Azure OpenAI with RBAC / Entra ID
+    #
+    # Supports:
+    # - az login
+    # - Managed Identity
+    # - VSCode Azure login
+    # - workload identity federation
+    # - service principals
+    # ----------------------------------------------------------
+    #
+    if azure_openai_endpoint:
         credential = DefaultAzureCredential(
             exclude_interactive_browser_credential=False,
         )
@@ -96,14 +149,20 @@ def get_llm_service() -> LLMServiceBase:
         )
 
         client = AzureOpenAI(
-            azure_endpoint=endpoint,
+            azure_endpoint=azure_openai_endpoint,
             azure_ad_token_provider=token_provider,
             api_version=_DEFAULT_OPENAI_API_VERSION,
         )
 
         return OpenAILLMService(client)
-    else:
-        raise ValueError(f"Unsupported LLM provider: {config.provider}")
+
+    raise ValueError(
+        "Unable to configure OpenAI client.\n"
+        "Expected one of:\n"
+        "- OPENAI_API_KEY\n"
+        "- AZURE_OPENAI_API_KEY + AZURE_OPENAI_ENDPOINT\n"
+        "- AZURE_OPENAI_ENDPOINT with RBAC-enabled identity"
+    )
 
 
 @lru_cache(maxsize=1)
