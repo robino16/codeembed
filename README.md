@@ -1,4 +1,4 @@
-# codeembed
+# CodeEmbed
 
 Embeds your codebase into a local vector database and exposes it as an MCP tool, giving AI assistants like Claude Code fast semantic search over your code.
 
