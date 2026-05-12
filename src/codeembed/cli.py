@@ -21,6 +21,12 @@ _CURATED_MODELS = [
     ("gemma4:e4b", "Google's all-around model, ~9.6GB"),
 ]
 
+_OPENAI_CURATED_MODELS = [
+    ("gpt-4o", "OpenAI flagship model, fast and multimodal"),
+    ("gpt-4o-mini", "Lightweight and cost-effective"),
+    ("gpt-4-turbo", "Powerful with large context window"),
+]
+
 
 def _ensure_gitignore() -> None:
     if not os.path.isfile(".gitignore"):
@@ -112,6 +118,43 @@ def _select_model(downloaded_models: list[str]) -> str:
     return options[index]
 
 
+def _select_openai_model() -> str:
+    typer.echo("\nSelect an OpenAI model for code summarization:\n")
+
+    options = list(_OPENAI_CURATED_MODELS)
+    for i, (model, description) in enumerate(options, 1):
+        typer.echo(f"  {i}. {model} — {description}")
+
+    custom_index = len(options) + 1
+    typer.echo(f"  {custom_index}. Enter a custom model name\n")
+
+    raw = typer.prompt(f"Choice (1-{custom_index})")
+
+    try:
+        index = int(raw) - 1
+        if index < 0 or index >= custom_index:
+            raise ValueError()
+    except ValueError:
+        typer.echo("Invalid choice. Please re-run 'codeembed init'.")
+        raise typer.Exit(1)
+
+    if index == len(options):
+        return typer.prompt("Model name (e.g. gpt-4o)")
+
+    return options[index][0]
+
+
+def _check_openai_credentials() -> str:
+    if os.getenv("OPENAI_API_KEY"):
+        return "[OPENAI_API_KEY set]"
+    azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    if azure_endpoint:
+        if os.getenv("AZURE_OPENAI_API_KEY"):
+            return "[Azure: endpoint + key set]"
+        return "[Azure: endpoint set, using RBAC]"
+    return "[no credentials found]"
+
+
 def _select_provider() -> Literal["ollama", "openai"]:
     typer.echo("\nSelect an LLM provider for code summarization:\n")
 
@@ -123,9 +166,10 @@ def _select_provider() -> Literal["ollama", "openai"]:
         is_ollama_running = False
 
     ollama_status = "[running]" if is_ollama_running else "[not running]" if is_ollama_installed else "[not installed]"
+    openai_status = _check_openai_credentials()
 
     typer.echo("  1. ollama " + ollama_status)
-    typer.echo("  2. openai")
+    typer.echo("  2. openai " + openai_status)
 
     raw = typer.prompt("Choice (1-2)")
 
@@ -202,10 +246,12 @@ def init():
     if provider == "ollama":
         _check_ollama_installed()
         _check_ollama_running()
+        downloaded_models = _get_downloaded_models()
+        model = _select_model(downloaded_models)
+        _ensure_model_downloaded(model, downloaded_models)
+    else:
+        model = _select_openai_model()
 
-    downloaded_models = _get_downloaded_models()
-    model = _select_model(downloaded_models)
-    _ensure_model_downloaded(model, downloaded_models)
     _write_config(model, provider, env_var_path)
 
     # TODO: Consider modifying .claude/settings.json to add our MCP server config.
