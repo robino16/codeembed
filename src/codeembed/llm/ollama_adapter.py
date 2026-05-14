@@ -32,9 +32,9 @@ class OllamaLLMService(LLMServiceBase):
         model = output_format.model_validate_json(data)
 
         return StructuredLLMResponse(
-            input_tokens=resp["usage"]["input_tokens"],
-            output_tokens=resp["usage"]["output_tokens"],
-            model=model,
+            input_tokens=resp["prompt_eval_count"] or 0,
+            output_tokens=resp["eval_count"] or 0,
+            data=model,
             llm_model=llm_model,
         )
 
@@ -57,8 +57,8 @@ class OllamaLLMService(LLMServiceBase):
         content = resp["message"]["content"]
 
         return LLMResponse(
-            input_tokens=resp["usage"]["input_tokens"],
-            output_tokens=resp["usage"]["output_tokens"],
+            input_tokens=resp["prompt_eval_count"] or 0,
+            output_tokens=resp["eval_count"] or 0,
             response=content,
             llm_model=llm_model,
         )

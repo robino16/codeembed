@@ -50,7 +50,7 @@ class OpenAILLMService(LLMServiceBase):
         return StructuredLLMResponse(
             input_tokens=completion.usage.prompt_tokens if completion.usage else 0,
             output_tokens=completion.usage.completion_tokens if completion.usage else 0,
-            model=parsed,
+            data=parsed,
             llm_model=llm_model,
         )
 

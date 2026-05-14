@@ -23,5 +23,5 @@ class LLMResponse:
 class StructuredLLMResponse(Generic[T]):
     input_tokens: int
     output_tokens: int
-    model: T
+    data: T
     llm_model: str

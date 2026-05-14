@@ -1,15 +1,18 @@
 import json
+import os
 from typing import Dict, Literal, Optional
 
 from codeembed.utils.time_utils import utc_now
 
 _SessionData = Dict[str, Dict[Literal["input_tokens", "output_tokens", "embedding_tokens"], int]]
 
+_SESSIONS_DIR = ".codeembed/sessions"
+
 
 class Session:
     def __init__(self):
         self._by_model: _SessionData = {}
-        self._session_id = utc_now().isoformat()
+        self._session_id = utc_now().strftime("%Y-%m-%dT%H-%M-%S")
 
     def add(
         self,
@@ -29,7 +32,10 @@ class Session:
             self._by_model[model_name]["output_tokens"] += output_tokens
 
     def save(self) -> None:
-        with open(f".codeembed/sessions/{self._session_id}.json", "w") as f:
+        if not self._by_model:
+            return
+        os.makedirs(_SESSIONS_DIR, exist_ok=True)
+        with open(f"{_SESSIONS_DIR}/{self._session_id}.json", "w") as f:
             f.write(json.dumps(self._by_model, indent=2))
 
     def get_usage(self) -> _SessionData:
