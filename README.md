@@ -26,7 +26,32 @@ uv tool install codeembed
 uv tool install 'codeembed[openai]'
 ```
 
+### Manual installation (from source)
+
+If CodeEmbed is not published to PyPI, build and install it locally:
+
+```bash
+# In the CodeEmbed repository
+git clone https://github.com/robino16/code-embedder
+cd code-embedder
+uv build
+```
+
+Copy the built `.whl` from `dist/` into your target project, then install it there:
+
+```bash
+# In your target project
+uv pip install codeembed-*.whl
+
+# With OpenAI support
+uv pip install 'codeembed[openai]-*.whl'
+```
+
+Then run `codeembed init`.
+
 ## Usage
+
+CodeEmbed is intended to be used within a single project — run all commands from your project root. Each project gets its own local vector database stored in `.codeembed/`.
 
 **1. Initialize** (run once in your project root):
 
@@ -34,21 +59,23 @@ uv tool install 'codeembed[openai]'
 codeembed init
 ```
 
-Creates a `codeembed.toml` config and configures your `.gitignore`. You'll be prompted to select a provider (Ollama or OpenAI) and a model.
+Creates a `codeembed.toml` config and configures your `.gitignore`. You'll be prompted to select a provider (Ollama or OpenAI) and a model. You'll also be offered the option to automatically configure Claude Code and/or GitHub Copilot.
 
-**2. Start the MCP server:**
+**2. Pre-populate the index:**
+
+```bash
+codeembed embed
+```
+
+Run this before starting the server — searches return nothing until at least one embed run completes.
+
+**3. Start the MCP server:**
 
 ```bash
 codeembed serve
 ```
 
-This embeds your codebase in the background and starts the MCP server. Respects your `.gitignore`.
-
-**3. Manually re-embed** (optional):
-
-```bash
-codeembed embed
-```
+Starts the MCP server. Respects your `.gitignore`.
 
 ## Configuring OpenAI
 
@@ -82,24 +109,48 @@ Set only the endpoint; CodeEmbed will use `DefaultAzureCredential` (supports `az
 AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/openai/v1/
 ```
 
-## Add to Claude Code
+## Add to Claude Code or GitHub Copilot
 
-```bash
-claude mcp add --scope project codeembed -- uv run codeembed serve
+`codeembed init` will offer to configure these automatically. If you prefer to do it manually:
+
+**Claude Code** — add to `.mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "codeembed": {
+      "command": "uv",
+      "args": ["run", "codeembed", "serve"]
+    }
+  }
+}
 ```
 
-Also add `mcp__codeembed__search` to `allowedTools` in your Claude config.
+And add to `.claude/settings.local.json` to enable and pre-approve the tool:
+
+```json
+{
+  "enabledMcpjsonServers": ["codeembed"],
+  "permissions": {
+    "allow": ["mcp__codeembed__search"]
+  }
+}
+```
+
+**GitHub Copilot** — add to `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "codeembed": {
+      "command": "uv",
+      "args": ["run", "codeembed", "serve"]
+    }
+  }
+}
+```
 
 The MCP server exposes a single `search(query)` tool for semantic search over your codebase.
-
-It appears you need to run:
-
-```bash
-codeembed serve
-claude
-```
-
-in order to make this work? Which makes little sense.
 
 ## Contributing
 
