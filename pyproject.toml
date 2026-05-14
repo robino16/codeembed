@@ -11,6 +11,7 @@ dependencies = [
     "pip-audit>=2.10.0",
     "pydantic>=2.13,<3",
     "python-dotenv>=1.2.2,<2",
+    "tiktoken>=0.12,<1",
 ]
 
 [project.optional-dependencies]

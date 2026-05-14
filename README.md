@@ -2,7 +2,7 @@
 
 Embeds your codebase into a local vector database and exposes it as an MCP tool, giving AI assistants like Claude Code fast semantic search over your code.
 
-Uses [ChromaDB](https://github.com/chroma-core/chroma) for local vector storage and either [Ollama](https://github.com/ollama/ollama) or OpenAI (including Azure OpenAI) for LLM analysis.
+Uses [ChromaDB](https://github.com/chroma-core/chroma) for local vector storage and either [Ollama](https://github.com/ollama/ollama) or OpenAI (including OpenAI models via Azure AI Foundry) for LLM analysis.
 
 ## Prerequisites
 
@@ -15,11 +15,13 @@ Uses [ChromaDB](https://github.com/chroma-core/chroma) for local vector storage 
 ## Installation
 
 **With Ollama:**
+
 ```bash
 uv tool install codeembed
 ```
 
 **With OpenAI / Azure OpenAI:**
+
 ```bash
 uv tool install 'codeembed[openai]'
 ```
@@ -32,7 +34,7 @@ uv tool install 'codeembed[openai]'
 codeembed init
 ```
 
-Creates a `codeembed.toml` config and adds `.codeembed/` to your `.gitignore`. You'll be prompted to select a provider (Ollama or OpenAI) and a model.
+Creates a `codeembed.toml` config and configures your `.gitignore`. You'll be prompted to select a provider (Ollama or OpenAI) and a model.
 
 **2. Start the MCP server:**
 
@@ -40,7 +42,7 @@ Creates a `codeembed.toml` config and adds `.codeembed/` to your `.gitignore`. Y
 codeembed serve
 ```
 
-This embeds your codebase in the background and starts the MCP server. Respects `.gitignore`.
+This embeds your codebase in the background and starts the MCP server. Respects your `.gitignore`.
 
 **3. Manually re-embed** (optional):
 
@@ -50,25 +52,25 @@ codeembed embed
 
 ## Configuring OpenAI
 
-If you use the OpenAI provider, credentials are read from environment variables. The recommended approach is a `.env` file — `codeembed init` will ask for the path, and it will be stored in `codeembed.toml` so `codeembed serve` and `codeembed embed` load it automatically.
+If you use the OpenAI provider, credentials are read from environment variables. The recommended approach is a `.env` file. `codeembed init` will ask for the path, and it will be stored in `codeembed.toml` so `codeembed serve` and `codeembed embed` loads the `.env` file automatically.
 
 ### Standard OpenAI
 
 ```env
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=...
 ```
 
 Optionally override the endpoint (for compatible APIs like vLLM, LM Studio, OpenRouter):
 
 ```env
-OPENAI_API_KEY=sk-...
-OPENAI_BASE_URL=https://your-endpoint/v1
+OPENAI_API_KEY=...
+OPENAI_BASE_URL=...
 ```
 
 ### Azure OpenAI — API key
 
 ```env
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/openai/v1/
 AZURE_OPENAI_API_KEY=...
 ```
 
@@ -77,7 +79,7 @@ AZURE_OPENAI_API_KEY=...
 Set only the endpoint; CodeEmbed will use `DefaultAzureCredential` (supports `az login`, managed identity, VS Code Azure sign-in, workload identity federation, and service principals):
 
 ```env
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/openai/v1/
 ```
 
 ## Add to Claude Code
