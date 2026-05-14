@@ -102,12 +102,6 @@ class DocEmbedder:
 
         for i, file in enumerate(files_to_update):
             logger.info(f"Processing file '{file}' ({i + 1}/{len(files_to_update)})...")
-            if splitter is None:
-                # NOTE: We could alternatively embed the full file as a fallback.
-                #       As long as we trust filter system.
-                logger.warning(f"Cannot embed file at path '{file}'. No splitter implemented for this file extension.")
-                num_skipped += 1
-                continue
             doc = self._doc_provider.get_content(file)
             segments = splitter.split_file(doc.content, file)
             chunks = []
