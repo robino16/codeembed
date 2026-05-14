@@ -1,0 +1,52 @@
+import json
+from typing import Dict, Literal, Optional
+
+from codeembed.utils.time_utils import utc_now
+
+_SessionData = Dict[str, Dict[Literal["input_tokens", "output_tokens", "embedding_tokens"], int]]
+
+
+class Session:
+    def __init__(self):
+        self._by_model: _SessionData = {}
+        self._session_id = utc_now().isoformat()
+
+    def add(
+        self,
+        model_name: str,
+        input_tokens: Optional[int] = None,
+        output_tokens: Optional[int] = None,
+        embedding_tokens: Optional[int] = None,
+        cost: Optional[float] = None,
+    ) -> None:
+        if model_name not in self._by_model:
+            self._by_model[model_name] = {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "embedding_tokens": 0,
+            }
+        if input_tokens is not None:
+            self._by_model[model_name]["input_tokens"] += input_tokens
+        if output_tokens is not None:
+            self._by_model[model_name]["output_tokens"] += output_tokens
+        if embedding_tokens is not None:
+            self._by_model[model_name]["embedding_tokens"] += embedding_tokens
+
+    def save(self) -> None:
+        with open(f".codeembed/sessions/{self._session_id}.json", "w") as f:
+            f.write(json.dumps(self._by_model, indent=2))
+
+    def get_usage(self) -> _SessionData:
+        return self._by_model
+
+    @property
+    def input_tokens(self) -> int:
+        return sum(tokens["input_tokens"] for tokens in self._by_model.values())
+
+    @property
+    def output_tokens(self) -> int:
+        return sum(tokens["output_tokens"] for tokens in self._by_model.values())
+
+    @property
+    def embedding_tokens(self) -> int:
+        return sum(tokens["embedding_tokens"] for tokens in self._by_model.values())

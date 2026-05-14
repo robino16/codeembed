@@ -4,14 +4,12 @@ import ollama
 from pydantic import BaseModel
 
 from codeembed.llm.base import LLMServiceBase
-from codeembed.llm.models import ChatMessage
+from codeembed.llm.models import ChatMessage, LLMResponse, StructuredLLMResponse
 
 T = TypeVar("T", bound=BaseModel)
 
 
 class OllamaLLMService(LLMServiceBase):
-    # TODO: Consider making it possible to specify Ollama host and port.
-
     def generate_structured_output(
         self,
         messages: List[ChatMessage],
@@ -19,7 +17,7 @@ class OllamaLLMService(LLMServiceBase):
         output_format: Type[T],
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
-    ) -> T:
+    ) -> StructuredLLMResponse[T]:
 
         options = {}
         if max_tokens is not None:
@@ -31,7 +29,14 @@ class OllamaLLMService(LLMServiceBase):
 
         data = resp["message"]["content"]
 
-        return output_format.model_validate_json(data)
+        model = output_format.model_validate_json(data)
+
+        return StructuredLLMResponse(
+            input_tokens=resp["usage"]["input_tokens"],
+            output_tokens=resp["usage"]["output_tokens"],
+            model=model,
+            llm_model=llm_model,
+        )
 
     def generate_response(
         self,
@@ -39,7 +44,7 @@ class OllamaLLMService(LLMServiceBase):
         llm_model: str,
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
-    ) -> str:
+    ) -> LLMResponse:
 
         options = {}
         if max_tokens is not None:
@@ -51,4 +56,9 @@ class OllamaLLMService(LLMServiceBase):
 
         content = resp["message"]["content"]
 
-        return content
+        return LLMResponse(
+            input_tokens=resp["usage"]["input_tokens"],
+            output_tokens=resp["usage"]["output_tokens"],
+            response=content,
+            llm_model=llm_model,
+        )

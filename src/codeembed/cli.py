@@ -5,7 +5,7 @@ from typing import Literal, Optional
 
 import typer
 
-from codeembed.bootstrap.services import get_config, get_llm_service
+from codeembed.bootstrap.services import get_config, get_llm_service, get_session
 from codeembed.llm.base import LLMServiceBase
 from codeembed.setup_logger import setup_logger
 
@@ -329,15 +329,20 @@ def embed():
         _check_ollama_running()
         _check_ollama_model_is_available(config.llm_model)
 
-    llm_service = get_llm_service()
+    try:
+        llm_service = get_llm_service()
 
-    _check_llm_is_available(llm_service, config.llm_model)
+        _check_llm_is_available(llm_service, config.llm_model)
 
-    typer.echo("Embedding codebase...\n")
+        typer.echo("Embedding codebase...\n")
 
-    from codeembed.bootstrap.services import get_embedder_service
+        from codeembed.bootstrap.services import get_embedder_service
 
-    embedder = get_embedder_service()
-    embedder.embed_codebase()
+        embedder = get_embedder_service()
+        embedder.embed_codebase()
+    finally:
+        session = get_session()
+        session.save()
+        typer.echo(f"\nInput tokens used: {session.input_tokens}. Output tokens used: {session.output_tokens}.")
 
     typer.echo("\nDone.")

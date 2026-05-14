@@ -6,7 +6,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel
 
 from codeembed.llm.base import LLMServiceBase
-from codeembed.llm.models import ChatMessage
+from codeembed.llm.models import ChatMessage, LLMResponse, StructuredLLMResponse
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -22,7 +22,7 @@ class OpenAILLMService(LLMServiceBase):
         output_format: Type[T],
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
-    ) -> T:
+    ) -> StructuredLLMResponse[T]:
 
         openai_messages = cast(List[ChatCompletionMessageParam], messages)
 
@@ -47,7 +47,12 @@ class OpenAILLMService(LLMServiceBase):
         if parsed is None:
             raise ValueError("LLM did not return structured output")
 
-        return parsed
+        return StructuredLLMResponse(
+            input_tokens=completion.usage.prompt_tokens if completion.usage else 0,
+            output_tokens=completion.usage.completion_tokens if completion.usage else 0,
+            model=parsed,
+            llm_model=llm_model,
+        )
 
     def generate_response(
         self,
@@ -55,7 +60,7 @@ class OpenAILLMService(LLMServiceBase):
         llm_model: str,
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
-    ) -> str:
+    ) -> LLMResponse:
 
         openai_messages = cast(List[ChatCompletionMessageParam], messages)
 
@@ -80,7 +85,12 @@ class OpenAILLMService(LLMServiceBase):
         if response is None:
             raise ValueError("LLM did not return a response")
 
-        return response
+        return LLMResponse(
+            input_tokens=completion.usage.prompt_tokens if completion.usage else 0,
+            output_tokens=completion.usage.completion_tokens if completion.usage else 0,
+            response=response,
+            llm_model=llm_model,
+        )
 
     def _is_reasoning_model(self, llm_model: str) -> bool:
         return not llm_model.startswith("gpt-4") and not llm_model.startswith("gpt-3")

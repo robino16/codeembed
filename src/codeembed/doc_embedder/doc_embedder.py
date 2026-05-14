@@ -55,11 +55,11 @@ This <segment type> is ...
         },
     ]
 
-    response = llm_service.generate_response(messages, llm_model, max_tokens=1024, temperature=0.3)
+    result = llm_service.generate_response(messages, llm_model, max_tokens=1024, temperature=0.3)
 
-    logger.info("Generated summary for segment in file %s: %s", file_path, response)
+    logger.info("Generated summary for segment in file %s: %s", file_path, result.response)
 
-    return response
+    return result.response
 
 
 class DocEmbedder:

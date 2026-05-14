@@ -5,6 +5,8 @@ import tomllib
 from functools import lru_cache
 
 from codeembed.config.models import CodeEmbedConfig
+from codeembed.cost_tracking.llm_wrapper import LLMServiceWithCostTracking
+from codeembed.cost_tracking.models import Session
 from codeembed.doc_embedder.doc_embedder import DocEmbedder
 from codeembed.doc_provider.local_doc_provider import LocalDocProvider
 from codeembed.doc_search_service.doc_search_service import DocSearchService
@@ -46,8 +48,7 @@ def get_config() -> CodeEmbedConfig:
     return default_config
 
 
-@lru_cache(maxsize=1)
-def get_llm_service() -> LLMServiceBase:
+def _get_llm_service() -> LLMServiceBase:
     config = get_config()
 
     #
@@ -172,6 +173,19 @@ def get_llm_service() -> LLMServiceBase:
 
 
 @lru_cache(maxsize=1)
+def get_session() -> Session:
+    return Session()
+
+
+@lru_cache(maxsize=1)
+def get_llm_service() -> LLMServiceBase:
+    session = get_session()
+    llm_service = _get_llm_service()
+    llm_service = LLMServiceWithCostTracking(llm_service, session)
+    return llm_service
+
+
+@lru_cache(maxsize=1)
 def get_embedder_service() -> DocEmbedder:
     config = get_config()
     doc_provider = LocalDocProvider(
@@ -188,9 +202,11 @@ def get_embedder_service() -> DocEmbedder:
 
 async def embed_loop() -> None:
     embedder = get_embedder_service()
+    session = get_session()
     while True:
         try:
             await asyncio.to_thread(embedder.embed_codebase)
         except Exception:
             logger.exception("Embedding run failed")
+        session.save()
         await asyncio.sleep(60)
