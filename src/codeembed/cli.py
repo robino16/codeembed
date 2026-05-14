@@ -1,7 +1,8 @@
+import json
 import os
 import shutil
 import subprocess
-from typing import Literal, Optional
+from typing import Any, Dict, Literal, Optional
 
 import typer
 
@@ -249,6 +250,53 @@ def _check_llm_is_available(llm_service: LLMServiceBase, llm_model: str) -> None
         raise typer.Exit(1)
 
 
+_MCP_SERVER_CONFIG = {
+    "command": "uv",
+    "args": ["run", "codeembed", "serve"],
+}
+
+
+def _read_json(path: str) -> Dict[str, Any]:
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _write_json(path: str, data: Dict[str, Any]) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True) if os.path.dirname(path) else None
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(json.dumps(data, indent=2) + "\n")
+
+
+def _add_to_claude_code() -> None:
+    mcp_json_path = ".mcp.json"
+    settings_path = os.path.join(".claude", "settings.local.json")
+
+    data: Dict[str, Any] = _read_json(mcp_json_path) if os.path.isfile(mcp_json_path) else {}
+    data.setdefault("mcpServers", {})["codeembed"] = _MCP_SERVER_CONFIG
+    _write_json(mcp_json_path, data)
+    typer.echo(f"  Updated '{mcp_json_path}'.")
+
+    data = _read_json(settings_path) if os.path.isfile(settings_path) else {}
+    enabled = data.setdefault("enabledMcpjsonServers", [])
+    if "codeembed" not in enabled:
+        enabled.append("codeembed")
+    perms = data.setdefault("permissions", {})
+    allowed = perms.setdefault("allow", [])
+    if "mcp__codeembed__search" not in allowed:
+        allowed.append("mcp__codeembed__search")
+    _write_json(settings_path, data)
+    typer.echo(f"  Updated '{settings_path}'.")
+
+
+def _add_to_github_copilot() -> None:
+    vscode_mcp_path = os.path.join(".vscode", "mcp.json")
+
+    data = _read_json(vscode_mcp_path) if os.path.isfile(vscode_mcp_path) else {}
+    data.setdefault("servers", {})["codeembed"] = _MCP_SERVER_CONFIG
+    _write_json(vscode_mcp_path, data)
+    typer.echo(f"  Updated '{vscode_mcp_path}'.")
+
+
 @app.command()
 def init():
     """Initialize CodeEmbed in the current project."""
@@ -279,10 +327,21 @@ def init():
 
     _write_config(model, provider, env_var_path)
 
-    # TODO: Consider modifying .claude/settings.json to add our MCP server config.
-    #       Just ask the user (add support for Claude Yes/No prompt).
+    typer.echo("")
+    if typer.confirm(
+        "Add CodeEmbed to Claude Code? (creates/updates .mcp.json and .claude/settings.local.json)", default=True
+    ):
+        _add_to_claude_code()
 
-    typer.echo("\nDone. Run 'codeembed serve' to start the MCP server.")
+    if typer.confirm("Add CodeEmbed to GitHub Copilot? (creates/updates .vscode/mcp.json)", default=False):
+        _add_to_github_copilot()
+
+    typer.echo(
+        "\nDone.\n\n"
+        "Tip: Run 'codeembed embed' once before starting the server to pre-populate\n"
+        "the index — searches will return nothing until at least one embed run completes.\n\n"
+        "Then run 'codeembed serve' to start the MCP server."
+    )
 
 
 @app.command()
