@@ -16,8 +16,6 @@ class Session:
         model_name: str,
         input_tokens: Optional[int] = None,
         output_tokens: Optional[int] = None,
-        embedding_tokens: Optional[int] = None,
-        cost: Optional[float] = None,
     ) -> None:
         if model_name not in self._by_model:
             self._by_model[model_name] = {
@@ -29,8 +27,6 @@ class Session:
             self._by_model[model_name]["input_tokens"] += input_tokens
         if output_tokens is not None:
             self._by_model[model_name]["output_tokens"] += output_tokens
-        if embedding_tokens is not None:
-            self._by_model[model_name]["embedding_tokens"] += embedding_tokens
 
     def save(self) -> None:
         with open(f".codeembed/sessions/{self._session_id}.json", "w") as f:
@@ -46,7 +42,3 @@ class Session:
     @property
     def output_tokens(self) -> int:
         return sum(tokens["output_tokens"] for tokens in self._by_model.values())
-
-    @property
-    def embedding_tokens(self) -> int:
-        return sum(tokens["embedding_tokens"] for tokens in self._by_model.values())
