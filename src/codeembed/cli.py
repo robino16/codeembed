@@ -1,7 +1,7 @@
 import os
 import shutil
 import subprocess
-from typing import Literal
+from typing import Literal, Optional
 
 import typer
 
@@ -207,7 +207,7 @@ def _ensure_model_downloaded(model: str, downloaded_models: list[str]) -> None:
         typer.echo(f"Skipping. You can pull it later with: ollama pull {model}")
 
 
-def _write_config(model: str, provider: Literal["ollama", "openai"], env_var_path: str | None = None) -> None:
+def _write_config(model: str, provider: Literal["ollama", "openai"], env_var_path: Optional[str] = None) -> None:
     config_toml = f"""\
 [codeembed]
 llm_model = "{model}"
@@ -224,7 +224,7 @@ sleep_interval = {_DEFAULT_SLEEP_INTERVAL}
     typer.echo(f"Created '{_CONFIG_FILE}'.")
 
 
-def _load_env_file(env_var_path: str | None) -> None:
+def _load_env_file(env_var_path: Optional[str]) -> None:
     if not env_var_path:
         return
     from dotenv import load_dotenv
@@ -261,14 +261,7 @@ def init():
     env_var_path = typer.prompt(
         "Do you have a .env file path? (optional, press Enter to skip)", default="", show_default=False
     )
-    if env_var_path:
-        if not os.path.isfile(env_var_path):
-            typer.echo(f"Error: File '{env_var_path}' not found.")
-            raise typer.Exit(1)
-        else:
-            from dotenv import load_dotenv
-
-            load_dotenv(env_var_path)
+    _load_env_file(env_var_path or None)
 
     _ensure_gitignore()
     _create_codeembed_dir()

@@ -30,8 +30,8 @@ class OpenAILLMService(LLMServiceBase):
         _max_tokens = max_tokens if max_tokens is not None else omit
         max_completion_tokens = omit
         if self._is_reasoning_model(llm_model):
-            _max_tokens = omit
             max_completion_tokens = _max_tokens
+            _max_tokens = omit
 
         completion = self._client.beta.chat.completions.parse(
             messages=openai_messages,
@@ -63,8 +63,8 @@ class OpenAILLMService(LLMServiceBase):
         _max_tokens = max_tokens if max_tokens is not None else omit
         max_completion_tokens = omit
         if self._is_reasoning_model(llm_model):
-            _max_tokens = omit
             max_completion_tokens = _max_tokens
+            _max_tokens = omit
 
         completion = self._client.chat.completions.create(
             messages=openai_messages,
