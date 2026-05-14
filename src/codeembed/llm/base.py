@@ -3,7 +3,7 @@ from typing import List, Optional, Type, TypeVar
 
 from pydantic import BaseModel
 
-from codeembed.llm.models import ChatMessage
+from codeembed.llm.models import ChatMessage, LLMResponse, StructuredLLMResponse
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -17,7 +17,7 @@ class LLMServiceBase(ABC):
         output_format: Type[T],
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
-    ) -> T:
+    ) -> StructuredLLMResponse[T]:
         pass
 
     @abstractmethod
@@ -27,5 +27,5 @@ class LLMServiceBase(ABC):
         llm_model: str,
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
-    ) -> str:
+    ) -> LLMResponse:
         pass
