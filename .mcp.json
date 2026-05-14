@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "codeembed": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "codeembed", "serve"]
+    }
+  }
+}

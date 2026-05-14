@@ -85,7 +85,7 @@ AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/openai/v1/
 ## Add to Claude Code
 
 ```bash
-claude mcp add codeembed -- uv run codeembed serve
+claude mcp add --scope project codeembed -- uv run codeembed serve
 ```
 
 Also add `mcp__codeembed__search` to `allowedTools` in your Claude config.
