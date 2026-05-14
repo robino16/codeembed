@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from codeembed.delta_computer.delta_computer import DeltaComputer
 from codeembed.doc_provider.base import DocProviderBase
-from codeembed.doc_splitters.factory import DocSplitterFactory
+from codeembed.doc_splitters.generic_splitter import FileSplitter
 from codeembed.doc_splitters.models import FileSegment
 from codeembed.llm.base import LLMServiceBase
 from codeembed.llm.models import ChatMessage
@@ -36,7 +36,7 @@ def _segment_to_chunk(
 <FileContent>
 {full_content}
 </FileContent>
-Please describe the purpose following {segment.type}:
+Please describe the purpose following code/text segment:
 <Segment>
 <Line Start>{segment.line_start}</Line Start>
 <Content>
@@ -50,7 +50,7 @@ Focus on the key aspects of the text or code.
 Write a succint summary.
 Return the summary only without any additional comments.
 Start with, e.g.,
-This {segment.type} is ...
+This <segment type> is ...
 """,
         },
     ]
@@ -98,18 +98,12 @@ class DocEmbedder:
         num_processed = 0
         num_skipped = 0
 
+        splitter = FileSplitter()
+
         for i, file in enumerate(files_to_update):
             logger.info(f"Processing file '{file}' ({i + 1}/{len(files_to_update)})...")
-            ext = file.split(".")[-1]
-            splitter = DocSplitterFactory.create(ext)
-            if splitter is None:
-                # NOTE: We could alternatively embed the full file as a fallback.
-                #       As long as we trust filter system.
-                logger.warning(f"Cannot embed file at path '{file}'. No splitter implemented for this file extension.")
-                num_skipped += 1
-                continue
             doc = self._doc_provider.get_content(file)
-            segments = splitter.split_file(doc.content)
+            segments = splitter.split_file(doc.content, file)
             chunks = []
             for segment in segments:
                 summary = _segment_to_chunk(self._llm_service, segment, doc.content, file, self._llm_model)

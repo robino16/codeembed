@@ -1,5 +1,5 @@
 [codeembed]
 llm_model = "gpt-oss:20b"
+provider = "ollama"
 debounce = 10
 sleep_interval = 60
-provider = "ollama"
