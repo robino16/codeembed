@@ -203,10 +203,15 @@ def get_embedder_service() -> DocEmbedder:
 async def embed_loop() -> None:
     embedder = get_embedder_service()
     session = get_session()
+    config = get_config()
     while True:
         try:
             await asyncio.to_thread(embedder.embed_codebase)
         except Exception:
             logger.exception("Embedding run failed")
         session.save()
-        await asyncio.sleep(60)
+        logger.info(
+            f"Input tokens used: {session.input_tokens}, output tokens used: {session.output_tokens}."
+            f"Sleeping for {config.sleep_interval} seconds..."
+        )
+        await asyncio.sleep(config.sleep_interval)
