@@ -65,7 +65,7 @@ def get_llm_service() -> LLMServiceBase:
 
     try:
         from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-        from openai import AzureOpenAI, OpenAI
+        from openai import OpenAI
 
         from codeembed.llm.openai_adapter import OpenAILLMService
     except ImportError as e:
@@ -121,10 +121,9 @@ def get_llm_service() -> LLMServiceBase:
     # ----------------------------------------------------------
     #
     if azure_openai_endpoint and azure_openai_api_key:
-        client = AzureOpenAI(
-            azure_endpoint=azure_openai_endpoint,
+        client = OpenAI(
+            base_url=azure_openai_endpoint,
             api_key=azure_openai_api_key,
-            api_version=_DEFAULT_OPENAI_API_VERSION,
         )
 
         return OpenAILLMService(client)
@@ -142,6 +141,12 @@ def get_llm_service() -> LLMServiceBase:
     # ----------------------------------------------------------
     #
     if azure_openai_endpoint:
+        # expected format: https://<resource-name>.openai.azure.com/openai/v1/
+        if not azure_openai_endpoint.startswith("https://") or ".openai.azure.com" not in azure_openai_endpoint:
+            raise ValueError(f"Invalid Azure OpenAI endpoint: {azure_openai_endpoint}")
+        elif not azure_openai_endpoint.endswith("/openai/v1/"):
+            logger.warning(f"Azure OpenAI endpoint {azure_openai_endpoint} does not end with the expected /openai/v1/.")
+
         credential = DefaultAzureCredential(
             exclude_interactive_browser_credential=False,
         )
@@ -151,10 +156,9 @@ def get_llm_service() -> LLMServiceBase:
             "https://cognitiveservices.azure.com/.default",
         )
 
-        client = AzureOpenAI(
-            azure_endpoint=azure_openai_endpoint,
-            azure_ad_token_provider=token_provider,
-            api_version=_DEFAULT_OPENAI_API_VERSION,
+        client = OpenAI(
+            base_url=azure_openai_endpoint,
+            api_key=token_provider,
         )
 
         return OpenAILLMService(client)
