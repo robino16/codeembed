@@ -5,7 +5,8 @@ from typing import Literal
 
 import typer
 
-from codeembed.bootstrap.services import get_config
+from codeembed.bootstrap.services import get_config, get_llm_service
+from codeembed.llm.base import LLMServiceBase
 from codeembed.setup_logger import setup_logger
 
 app = typer.Typer()
@@ -23,28 +24,36 @@ _CURATED_MODELS = [
 
 _OPENAI_CURATED_MODELS = [
     ("gpt-4.1-mini", "Lightweight and cost-effective"),
+    ("gpt-5.4-mini", "Newer, lightweight and cost-effective"),
+    ("gpt-5.4-nano", "Newer and super lightweight option"),
 ]
 
 
 def _ensure_gitignore() -> None:
     if not os.path.isfile(".gitignore"):
         typer.echo("Error: No .gitignore found. Run 'codeembed init' from the root of your git repository.")
-        typer.echo("A .gitignore is required to prevent CodeEmbed from embedding sensitive files.")
+        typer.echo("A .gitignore is required to prevent CodeEmbed from embedding your sensitive files.")
         raise typer.Exit(1)
 
     with open(".gitignore", "r", encoding="utf-8") as f:
         content = f.read()
 
     if _GITIGNORE_ENTRY not in content:
+        # ask user for permission to modify .gitignore
+        typer.echo(f"CodeEmbed stores its data in the '{_CODEEMBED_DIR}/' directory.")
+        typer.echo(f"You must add '{_GITIGNORE_ENTRY}' to your .gitignore to use CodeEmbed safely.")
+        if not typer.confirm(f"Add '{_GITIGNORE_ENTRY}' to your .gitignore now?", default=True):
+            typer.echo(f"Error: Gitignore is missing '{_GITIGNORE_ENTRY}' entry for safe operation.")
+            raise typer.Exit(1)
         with open(".gitignore", "a", encoding="utf-8") as f:
             f.write(f"\n# CodeEmbed\n{_GITIGNORE_ENTRY}\n")
-        typer.echo(f"Added '{_GITIGNORE_ENTRY}' to .gitignore.")
+        typer.echo(f"Added '{_GITIGNORE_ENTRY}' to .gitignore. Remember to commit this change.\n")
 
 
 def _create_codeembed_dir() -> None:
     if not os.path.isdir(_CODEEMBED_DIR):
         os.makedirs(_CODEEMBED_DIR)
-        typer.echo(f"Created '{_CODEEMBED_DIR}/' directory.")
+        typer.echo(f"Created '{_CODEEMBED_DIR}/' directory.\n")
 
 
 def _check_ollama_installed() -> None:
@@ -82,8 +91,8 @@ def _get_downloaded_models() -> list[str]:
     return models
 
 
-def _select_model(downloaded_models: list[str]) -> str:
-    typer.echo("\nSelect an LLM model for code summarization:\n")
+def _select_ollama_llm_model(downloaded_models: list[str]) -> str:
+    typer.echo("\nSelect a local LLM model for code summarization:\n")
 
     options: list[str] = []
 
@@ -117,7 +126,7 @@ def _select_model(downloaded_models: list[str]) -> str:
 
 
 def _select_openai_model() -> str:
-    typer.echo("\nSelect an OpenAI model for code summarization:\n")
+    typer.echo("\nSelect an OpenAI LLM deployment for code summarization:\n")
 
     options = list(_OPENAI_CURATED_MODELS)
     for i, (model, description) in enumerate(options, 1):
@@ -215,6 +224,19 @@ sleep_interval = {_DEFAULT_SLEEP_INTERVAL}
     typer.echo(f"Created '{_CONFIG_FILE}'.")
 
 
+def _check_llm_is_available(llm_service: LLMServiceBase, llm_model: str) -> None:
+    # Pings the LLM deployment. Raises exception if it's not available.
+    try:
+        llm_service.generate_response(
+            [{"role": "system", "content": "Ping!"}],
+            llm_model,
+            # TODO: Specify a low max_tokens (like 5)
+        )
+    except Exception as e:
+        typer.echo(f"Error: Failed to ping LLM model or deployment '{llm_model}'. Details: {e}")
+        raise typer.Exit(1)
+
+
 @app.command()
 def init():
     """Initialize CodeEmbed in the current project."""
@@ -245,7 +267,7 @@ def init():
         _check_ollama_installed()
         _check_ollama_running()
         downloaded_models = _get_downloaded_models()
-        model = _select_model(downloaded_models)
+        model = _select_ollama_llm_model(downloaded_models)
         _ensure_model_downloaded(model, downloaded_models)
     else:
         model = _select_openai_model()
@@ -282,6 +304,10 @@ def serve():
         _check_ollama_running()
         _check_ollama_model_is_available(config.llm_model)
 
+    llm_service = get_llm_service()
+
+    _check_llm_is_available(llm_service, config.llm_model)
+
     from codeembed.mcp_server import mcp
 
     typer.echo("Starting CodeEmbed MCP server...")
@@ -311,6 +337,10 @@ def embed():
         _check_ollama_installed()
         _check_ollama_running()
         _check_ollama_model_is_available(config.llm_model)
+
+    llm_service = get_llm_service()
+
+    _check_llm_is_available(llm_service, config.llm_model)
 
     typer.echo("Embedding codebase...\n")
 
