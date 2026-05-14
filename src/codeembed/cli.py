@@ -224,6 +224,17 @@ sleep_interval = {_DEFAULT_SLEEP_INTERVAL}
     typer.echo(f"Created '{_CONFIG_FILE}'.")
 
 
+def _load_env_file(env_var_path: str | None) -> None:
+    if not env_var_path:
+        return
+    from dotenv import load_dotenv
+
+    if not os.path.isfile(env_var_path):
+        typer.echo(f"Error: Environment variable file '{env_var_path}' not found.")
+        raise typer.Exit(1)
+    load_dotenv(env_var_path)
+
+
 def _check_llm_is_available(llm_service: LLMServiceBase, llm_model: str) -> None:
     # Pings the LLM deployment. Raises exception if it's not available.
     try:
@@ -289,14 +300,7 @@ def serve():
         raise typer.Exit(1)
 
     config = get_config()
-
-    if config.env_var_path:
-        from dotenv import load_dotenv
-
-        if not os.path.isfile(config.env_var_path):
-            typer.echo(f"Error: Environment variable file '{config.env_var_path}' not found.")
-            raise typer.Exit(1)
-        load_dotenv(config.env_var_path)
+    _load_env_file(config.env_var_path)
 
     setup_logger()
 
@@ -323,14 +327,7 @@ def embed():
         raise typer.Exit(1)
 
     config = get_config()
-
-    if config.env_var_path:
-        from dotenv import load_dotenv
-
-        if not os.path.isfile(config.env_var_path):
-            typer.echo(f"Error: Environment variable file '{config.env_var_path}' not found.")
-            raise typer.Exit(1)
-        load_dotenv(config.env_var_path)
+    _load_env_file(config.env_var_path)
 
     setup_logger()
 

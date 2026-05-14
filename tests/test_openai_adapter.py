@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from openai._types import omit
 from pydantic import BaseModel
 
 from codeembed.llm.models import ChatMessage
@@ -22,7 +23,14 @@ def test_generate_response_returns_content():
     result = OpenAILLMService(client).generate_response(_MESSAGES, _MODEL)
 
     assert result == "hello world"
-    client.chat.completions.create.assert_called_once_with(messages=_MESSAGES, model=_MODEL)
+    client.chat.completions.create.assert_called_once_with(
+        messages=_MESSAGES,
+        model=_MODEL,
+        max_tokens=omit,
+        max_completion_tokens=omit,
+        temperature=omit,
+        response_format={"type": "text"},
+    )
 
 
 def test_generate_response_raises_on_none_content():
@@ -42,7 +50,12 @@ def test_generate_structured_output_returns_parsed():
 
     assert result == expected
     client.beta.chat.completions.parse.assert_called_once_with(
-        messages=_MESSAGES, model=_MODEL, response_format=_Output
+        messages=_MESSAGES,
+        model=_MODEL,
+        response_format=_Output,
+        max_tokens=omit,
+        max_completion_tokens=omit,
+        temperature=omit,
     )
 
 
