@@ -6,6 +6,9 @@ from typing import Iterator, List
 from codeembed.doc_provider.base import DocProviderBase
 from codeembed.doc_provider.models import DocumentContent, DocumentMeta
 
+_SKIP_DIRS = frozenset({"venv", ".venv", "node_modules", "dist", "build"})
+_SKIP_FILES = frozenset({"__init__.py", ".env", ".env.local", "appsettings.json", "appsettings.Development.json"})
+
 
 def _get_git_files(base_path: str) -> set[str]:
     result = subprocess.run(
@@ -31,7 +34,8 @@ class LocalDocProvider(DocProviderBase):
             if ext.lower() not in self._supported_file_extensions:
                 continue
 
-            if file_path.endswith("__init__.py"):
+            parts = file_path.split("/")
+            if parts[-1] in _SKIP_FILES or any(d in _SKIP_DIRS for d in parts[:-1]):
                 continue
 
             try:

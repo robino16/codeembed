@@ -10,6 +10,13 @@ dependencies = [
     "ollama>=0.6,<1",
     "pip-audit>=2.10.0",
     "pydantic>=2.13,<3",
+    "python-dotenv>=1.2.2,<2",
+]
+
+[project.optional-dependencies]
+openai = [
+    "azure-identity>=1.25,<2",
+    "openai>=2.33,<3",
 ]
 
 [project.scripts]
@@ -24,6 +31,8 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "azure-identity>=1.25,<2",
+    "openai>=2.33,<3",
     "pre-commit==4.6.0",
     "pytest==9.0.3",
     "ruff==0.15.12",
