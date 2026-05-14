@@ -1,4 +1,5 @@
-﻿import logging
+import logging
+from typing import List
 from uuid import uuid4
 
 from codeembed.delta_computer.delta_computer import DeltaComputer
@@ -6,6 +7,7 @@ from codeembed.doc_provider.base import DocProviderBase
 from codeembed.doc_splitters.factory import DocSplitterFactory
 from codeembed.doc_splitters.models import FileSegment
 from codeembed.llm.base import LLMServiceBase
+from codeembed.llm.models import ChatMessage
 from codeembed.vector_db.base import VectorDbBase
 from codeembed.vector_db.models import Chunk
 
@@ -23,11 +25,9 @@ def _segment_to_chunk(
     # NOTE: For markdown files we could embed directly without LLM summarization.
     #       Just split on ## headers.
 
-    logger.info(
-        "Analyzing segment %s in file %s...", segment.content.split("\n")[0], file_path
-    )
+    logger.info("Analyzing segment %s in file %s...", segment.content.split("\n")[0], file_path)
 
-    messages = [
+    messages: List[ChatMessage] = [
         {"role": "system", "content": "You are an expert at describing code."},
         {
             "role": "user",
@@ -55,7 +55,7 @@ This {segment.type} is ...
         },
     ]
 
-    response = llm_service.generate_response(messages, llm_model)
+    response = llm_service.generate_response(messages, llm_model, max_tokens=1024, temperature=0.3)
 
     logger.info("Generated summary for segment in file %s: %s", file_path, response)
 
@@ -78,7 +78,7 @@ class DocEmbedder:
         self._debounce_seconds = debounce_seconds
 
     def embed_codebase(self) -> None:
-        """ Embeds the codebase and prepares it for vector search."""
+        """Embeds the codebase and prepares it for vector search."""
 
         logger.info("Computing deltas...")
 
@@ -86,15 +86,11 @@ class DocEmbedder:
             self._doc_provider, self._vector_db, self._debounce_seconds
         ).compute_deltas()
 
-        logger.info(
-            f"Detected {len(chunks_ids_to_remove)} chunks to delete from vector database."
-        )
+        logger.info(f"Detected {len(chunks_ids_to_remove)} chunks to delete from vector database.")
         logger.info(f"Detected {len(files_to_update)} files to process.")
 
         if chunks_ids_to_remove:
-            logger.info(
-                f"Deleting {len(chunks_ids_to_remove)} chunks from vector database."
-            )
+            logger.info(f"Deleting {len(chunks_ids_to_remove)} chunks from vector database.")
             self._vector_db.delete_chunks(list(chunks_ids_to_remove))
 
         logger.info(f"Processing {len(files_to_update)} files...")
@@ -109,18 +105,14 @@ class DocEmbedder:
             if splitter is None:
                 # NOTE: We could alternatively embed the full file as a fallback.
                 #       As long as we trust filter system.
-                logger.warning(
-                    f"Cannot embed file at path '{file}'. No splitter implemented for this file extension."
-                )
+                logger.warning(f"Cannot embed file at path '{file}'. No splitter implemented for this file extension.")
                 num_skipped += 1
                 continue
             doc = self._doc_provider.get_content(file)
             segments = splitter.split_file(doc.content)
             chunks = []
             for segment in segments:
-                summary = _segment_to_chunk(
-                    self._llm_service, segment, doc.content, file, self._llm_model
-                )
+                summary = _segment_to_chunk(self._llm_service, segment, doc.content, file, self._llm_model)
                 chunks.append(
                     Chunk(
                         id=uuid4(),
@@ -134,9 +126,7 @@ class DocEmbedder:
                     )
                 )
             if not chunks:
-                logger.warning(
-                    f"No chunks generated for file '{file}'. Skipping embedding for this file."
-                )
+                logger.warning(f"No chunks generated for file '{file}'. Skipping embedding for this file.")
                 num_skipped += 1
                 continue
             logger.info(f"Saving {len(chunks)} chunks to vector database.")

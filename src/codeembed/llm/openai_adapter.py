@@ -1,6 +1,7 @@
-from typing import List, Type, TypeVar, cast
+from typing import List, Optional, Type, TypeVar, cast
 
 from openai import OpenAI
+from openai._types import omit
 from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel
 
@@ -19,14 +20,26 @@ class OpenAILLMService(LLMServiceBase):
         messages: List[ChatMessage],
         llm_model: str,
         output_format: Type[T],
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
     ) -> T:
 
         openai_messages = cast(List[ChatCompletionMessageParam], messages)
+
+        # newer OpenAI models requires max_completion_tokens instead of max_tokens...
+        _max_tokens = max_tokens if max_tokens is not None else omit
+        max_completion_tokens = omit
+        if self._is_reasoning_model(llm_model):
+            _max_tokens = omit
+            max_completion_tokens = _max_tokens
 
         completion = self._client.beta.chat.completions.parse(
             messages=openai_messages,
             model=llm_model,
             response_format=output_format,
+            max_tokens=_max_tokens,
+            max_completion_tokens=max_completion_tokens,
+            temperature=temperature if temperature is not None else omit,
         )
 
         parsed = completion.choices[0].message.parsed
@@ -40,13 +53,26 @@ class OpenAILLMService(LLMServiceBase):
         self,
         messages: List[ChatMessage],
         llm_model: str,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
     ) -> str:
 
         openai_messages = cast(List[ChatCompletionMessageParam], messages)
 
+        # newer OpenAI models requires max_completion_tokens instead of max_tokens...
+        _max_tokens = max_tokens if max_tokens is not None else omit
+        max_completion_tokens = omit
+        if self._is_reasoning_model(llm_model):
+            _max_tokens = omit
+            max_completion_tokens = _max_tokens
+
         completion = self._client.chat.completions.create(
             messages=openai_messages,
             model=llm_model,
+            max_tokens=_max_tokens,
+            max_completion_tokens=max_completion_tokens,
+            temperature=temperature if temperature is not None else omit,
+            response_format={"type": "text"},
         )
 
         response = completion.choices[0].message.content
@@ -55,3 +81,6 @@ class OpenAILLMService(LLMServiceBase):
             raise ValueError("LLM did not return a response")
 
         return response
+
+    def _is_reasoning_model(self, llm_model: str) -> bool:
+        return not llm_model.startswith("gpt-4") and not llm_model.startswith("gpt-3")

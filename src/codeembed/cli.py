@@ -230,7 +230,8 @@ def _check_llm_is_available(llm_service: LLMServiceBase, llm_model: str) -> None
         llm_service.generate_response(
             [{"role": "system", "content": "Ping!"}],
             llm_model,
-            # TODO: Specify a low max_tokens (like 5)
+            temperature=0.0,
+            max_tokens=1,
         )
     except Exception as e:
         typer.echo(f"Error: Failed to ping LLM model or deployment '{llm_model}'. Details: {e}")
