@@ -251,8 +251,8 @@ def _check_llm_is_available(llm_service: LLMServiceBase, llm_model: str) -> None
 
 
 _MCP_SERVER_CONFIG = {
-    "command": "uv",
-    "args": ["run", "codeembed", "serve"],
+    "command": "codeembed",
+    "args": ["serve"],
 }
 
 

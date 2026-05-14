@@ -28,26 +28,20 @@ uv tool install 'codeembed[openai]'
 
 ### Manual installation (from source)
 
-If CodeEmbed is not published to PyPI, build and install it locally:
+If CodeEmbed is not published to PyPI, install it directly from source:
 
 ```bash
-# In the CodeEmbed repository
-git clone https://github.com/robino16/code-embedder
-cd code-embedder
-uv build
-```
+git clone https://github.com/robino16/codeembed
+cd codeembed
 
-Copy the built `.whl` from `dist/` into your target project, then install it there:
-
-```bash
-# In your target project
-uv pip install codeembed-*.whl
+# With Ollama
+uv tool install .
 
 # With OpenAI support
-uv pip install 'codeembed[openai]-*.whl'
+uv tool install '.[openai]'
 ```
 
-Then run `codeembed init`.
+Then run `codeembed init` inside of your target repository.
 
 ## Usage
 
@@ -119,8 +113,8 @@ AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/openai/v1/
 {
   "mcpServers": {
     "codeembed": {
-      "command": "uv",
-      "args": ["run", "codeembed", "serve"]
+      "command": "codeembed",
+      "args": ["serve"]
     }
   }
 }
@@ -143,8 +137,8 @@ And add to `.claude/settings.local.json` to enable and pre-approve the tool:
 {
   "servers": {
     "codeembed": {
-      "command": "uv",
-      "args": ["run", "codeembed", "serve"]
+      "command": "codeembed",
+      "args": ["serve"]
     }
   }
 }
