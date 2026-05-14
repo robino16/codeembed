@@ -6,6 +6,16 @@ from typing import Iterator, List
 from codeembed.doc_provider.base import DocProviderBase
 from codeembed.doc_provider.models import DocumentContent, DocumentMeta
 
+# protect users
+_SKIP_KEYWORDS = {
+    "__init__",
+    "venv",
+    "env",
+    "node_modules",
+    "dist",
+    "build",
+}
+
 
 def _get_git_files(base_path: str) -> set[str]:
     result = subprocess.run(
@@ -31,7 +41,7 @@ class LocalDocProvider(DocProviderBase):
             if ext.lower() not in self._supported_file_extensions:
                 continue
 
-            if file_path.endswith("__init__.py"):
+            if any(keyword in file_path for keyword in _SKIP_KEYWORDS):
                 continue
 
             try:

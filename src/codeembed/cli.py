@@ -22,9 +22,7 @@ _CURATED_MODELS = [
 ]
 
 _OPENAI_CURATED_MODELS = [
-    ("gpt-4o", "OpenAI flagship model, fast and multimodal"),
-    ("gpt-4o-mini", "Lightweight and cost-effective"),
-    ("gpt-4-turbo", "Powerful with large context window"),
+    ("gpt-4.1-mini", "Lightweight and cost-effective"),
 ]
 
 
