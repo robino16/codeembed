@@ -7,10 +7,13 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
+    environment: pypi
+
     steps:
       - uses: actions/checkout@v6
 
@@ -19,25 +22,10 @@ jobs:
       - name: Build
         run: uv build
 
-      - name: Check artifacts
-        run: uv pip install twine==6.2.0 && uv run twine check dist/*
+      - name: Validate
+        run: uvx twine check dist/*
 
-      - uses: actions/upload-artifact@v7
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          name: dist
-          path: dist/
-
-  publish:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write # required for OIDC trusted publishing
-      contents: read
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: dist
-          path: dist/
-
-      - uses: pypa/gh-action-pypi-publish@release/v1
+          packages-dir: dist/
