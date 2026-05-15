@@ -159,6 +159,18 @@ cd codeembed
 uv sync
 ```
 
+Check for dependency conflicts with:
+
+```bash
+uv pip check
+```
+
+Check for package vulnerabilities with:
+
+```bash
+uv run pip-audit
+```
+
 (Optional) Add Ruff pre-commit with:
 
 ```bash

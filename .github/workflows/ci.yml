@@ -12,5 +12,13 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       - run: uvx ruff check .
       - run: uvx ruff format --check .
-      - run: uv pip install pip-audit==2.10.0 && uv run pip-audit
-      - run: uv pip install pytest==9.0.3 && uv run pytest
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      - run: uv sync
+      - run: uv pip check
+      - run: uv run pip-audit
+      - run: uv run pytest
