@@ -29,6 +29,7 @@ class LocalDocProvider(DocProviderBase):
 
         file_paths = _get_git_files(self._base_path)
 
+        docs: List[DocumentMeta] = []
         for file_path in file_paths:
             ext = file_path.split(".")[-1]
             if ext.lower() not in self._supported_file_extensions:
@@ -42,13 +43,12 @@ class LocalDocProvider(DocProviderBase):
                 modified_ts = os.path.getmtime(file_path)
                 modified_at = datetime.fromtimestamp(modified_ts, tz=timezone.utc)
             except OSError:
-                # Skip files we can't stat
                 continue
 
-            yield DocumentMeta(
-                file_path=file_path,
-                modified_at=modified_at,
-            )
+            docs.append(DocumentMeta(file_path=file_path, modified_at=modified_at))
+
+        docs.sort(key=lambda d: d.modified_at, reverse=True)
+        yield from docs
 
     def get_content(self, file_path: str) -> DocumentContent:
         with open(file_path, "r", encoding="utf-8") as f:

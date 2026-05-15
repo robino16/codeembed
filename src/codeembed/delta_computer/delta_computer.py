@@ -15,14 +15,14 @@ class DeltaComputer:
         self._vector_db = vector_db
         self._debounce_seconds = debounce_seconds
 
-    def compute_deltas(self) -> Tuple[Set[UUID], Set[str]]:
+    def compute_deltas(self) -> Tuple[Set[UUID], List[str]]:
         """
-        Returns chunk IDs to delete and file paths to process.
+        Returns chunk IDs to delete and file paths to process (newest-modified-first).
 
         May not have best perfomance since we iterate each chunk stored in the vector database.
         """
 
-        file_paths_to_update = set()
+        file_paths_to_update: List[str] = []
 
         file_path_to_chunk_ids: Dict[str, List[UUID]] = {}
         chunk_ids_to_delete: Set[UUID] = set()
@@ -60,7 +60,7 @@ class DeltaComputer:
                         continue
 
                 # file updated or added
-                file_paths_to_update.add(file_path)
+                file_paths_to_update.append(file_path)
 
                 # We delete all old chunks for any modified files.
                 for chunk_id in file_path_to_chunk_ids.get(file_path, []):

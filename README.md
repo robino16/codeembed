@@ -61,7 +61,7 @@ Creates a `codeembed.toml` config and configures your `.gitignore`. You'll be pr
 codeembed embed
 ```
 
-Run this before starting the server — searches return nothing until at least one embed run completes.
+Run this before starting the server to pre-populate the index. The server also embeds in the background automatically, but searches will return empty results until the first file is embedded.
 
 **3. Start the MCP server:**
 
