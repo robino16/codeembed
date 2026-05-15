@@ -148,11 +148,30 @@ The MCP server exposes a single `search(query)` tool for semantic search over yo
 
 ## Contributing
 
+Clone this repo with:
+
 ```bash
+git@github.com:robino16/codeembed.git
+```
+
+```bash
+cd codeembed
 uv sync
 ```
 
-Optionally add Ruff pre-commit with:
+Check for dependency conflicts with:
+
+```bash
+uv pip check
+```
+
+Check for package vulnerabilities with:
+
+```bash
+uv run pip-audit
+```
+
+(Optional) Add Ruff pre-commit with:
 
 ```bash
 pre-commit install
@@ -180,6 +199,18 @@ Run tests:
 
 ```bash
 uv run --no-sync pytest
+```
+
+Build with:
+
+```bash
+uv build
+```
+
+Validate build with:
+
+```bash
+uv run twine check dist/*
 ```
 
 > `--no-sync` is required for local dev commands when the MCP server is running, as uv holds a lock that blocks sync operations.
