@@ -1,10 +1,6 @@
 {
-  "enabledMcpjsonServers": [
-    "codeembed"
-  ],
+  "enabledMcpjsonServers": ["codeembed"],
   "permissions": {
-    "allow": [
-      "mcp__codeembed__search"
-    ]
+    "allow": ["mcp__codeembed__search"]
   }
 }
