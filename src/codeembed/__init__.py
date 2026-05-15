@@ -7,6 +7,7 @@ from codeembed.bootstrap import (
     get_session,
 )
 from codeembed.config import CodeEmbedConfig
+from codeembed.cost_tracking import LLMServiceWithCostTracking, Session
 from codeembed.delta_computer import DeltaComputer
 from codeembed.doc_embedder import DocEmbedder
 from codeembed.doc_provider import DocProviderBase, DocumentContent, DocumentMeta, LocalDocProvider
@@ -38,9 +39,11 @@ __all__ = [
     "FileSplitter",
     "LLMResponse",
     "LLMServiceBase",
+    "LLMServiceWithCostTracking",
     "LocalDocProvider",
     "OllamaLLMService",
     "OpenAILLMService",
+    "Session",
     "SplittedFile",
     "StructuredLLMResponse",
     "VectorDbBase",

@@ -54,7 +54,7 @@ def main() -> None:
     top_level_imports: list[tuple[str, list[str]]] = []
 
     for package_dir in sorted(CODEEMBED_SRC.iterdir()):
-        if not package_dir.is_dir() or not (package_dir / "__init__.py").exists():
+        if not package_dir.is_dir():
             continue
         names = process_package(package_dir)
         if names:
