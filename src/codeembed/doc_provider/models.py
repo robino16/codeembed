@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from datetime import datetime
 
 from codeembed.utils.checksum_utils import string_to_sha256

@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 from contextlib import asynccontextmanager, suppress
 
 from mcp.server.fastmcp import FastMCP
