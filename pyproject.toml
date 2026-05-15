@@ -1,14 +1,28 @@
 [project]
 name = "codeembed"
-version = "0.1.0b2"
+version = "0.1.0b3"
 description = "Embeds your codebase and makes it available for quick LLM lookups via MCP."
 readme = "README.md"
 requires-python = ">=3.11"
+license = {file = "LICENSE"}
+authors = [
+    {name = "robino16", email = "robinoms.dev@proton.me"},
+]
+keywords = ["mcp", "embeddings", "vector-search", "codebase", "llm", "rag"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
 dependencies = [
     "chromadb>=1.5,<2",
     "mcp>=1.26,<2",
     "ollama>=0.6,<1",
-    "pip-audit>=2.10.0",
     "pydantic>=2.13,<3",
     "python-dotenv>=1.2.2,<2",
     "tiktoken>=0.12,<1",
@@ -23,8 +37,10 @@ openai = [
 [project.scripts]
 codeembed = "codeembed.cli:app"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[project.urls]
+Homepage = "https://github.com/robino16/codeembed"
+Repository = "https://github.com/robino16/codeembed"
+Issues = "https://github.com/robino16/codeembed/issues"
 
 [build-system]
 requires = ["hatchling"]
@@ -32,15 +48,16 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "azure-identity>=1.25,<2",
-    "openai>=2.33,<3",
+    "azure-identity==1.25.3",
+    "openai==2.33.0",
     "pre-commit==4.6.0",
     "pytest==9.0.3",
     "ruff==0.15.12",
+    "pip-audit==2.10.0",
 ]
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py311"
 line-length = 120
 
 [tool.ruff.lint]
