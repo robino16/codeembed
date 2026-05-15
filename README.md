@@ -150,8 +150,6 @@ The MCP server exposes a single `search(query)` tool for semantic search over yo
 
 ```bash
 uv sync
-uv pip install -e .
-claude mcp add codeembed -- uv run codeembed serve
 ```
 
 Optionally add Ruff pre-commit with:
@@ -160,8 +158,28 @@ Optionally add Ruff pre-commit with:
 pre-commit install
 ```
 
+Update init files:
+
+```bash
+uv run --no-sync scripts/generate_init_files.py
+```
+
+Run linter:
+
+```bash
+ruff check . --fix
+```
+
+Run formatter:
+
+```bash
+ruff format .
+```
+
 Run tests:
 
 ```bash
-uv run pytest tests
+uv run --no-sync pytest
 ```
+
+> `--no-sync` is required for local dev commands when the MCP server is running, as uv holds a lock that blocks sync operations.
