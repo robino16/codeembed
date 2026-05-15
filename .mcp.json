@@ -2,11 +2,7 @@
   "mcpServers": {
     "codeembed": {
       "command": "uv",
-      "args": [
-        "run",
-        "codeembed",
-        "serve"
-      ]
+      "args": ["run", "codeembed", "serve"]
     }
   }
 }

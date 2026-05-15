@@ -22,7 +22,7 @@ class DeltaComputer:
         May not have best perfomance since we iterate each chunk stored in the vector database.
         """
 
-        file_paths_to_update = set()
+        file_paths_to_update: Set[str] = set()
 
         file_path_to_chunk_ids: Dict[str, List[UUID]] = {}
         chunk_ids_to_delete: Set[UUID] = set()

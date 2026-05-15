@@ -29,6 +29,22 @@ _OPENAI_CURATED_MODELS = [
     ("gpt-5.4-nano", "Newer and super lightweight option"),
 ]
 
+_AGENT_INSTRUCTION_FILES = [
+    "AGENTS.md",
+    "CLAUDE.md",
+    os.path.join(".github", "copilot-instructions.md"),
+]
+
+_AGENT_INSTRUCTIONS_MARKER = "mcp__codeembed__search"
+
+_AGENT_INSTRUCTIONS_CONTENT = """\
+## Codebase search
+
+Use the `mcp__codeembed__search` tool as the first step for any question about how this \
+codebase works — how something is implemented, where something is defined, what calls what. \
+Prefer it over grep or file reads for exploratory questions.
+"""
+
 
 def _ensure_gitignore() -> None:
     if not os.path.isfile(".gitignore"):
@@ -288,6 +304,30 @@ def _add_to_claude_code() -> None:
     typer.echo(f"  Updated '{settings_path}'.")
 
 
+def _add_agent_instructions() -> None:
+    target = next(
+        (f for f in _AGENT_INSTRUCTION_FILES if os.path.isfile(f)),
+        "AGENTS.md",
+    )
+
+    if os.path.isfile(target):
+        with open(target, "r", encoding="utf-8") as f:
+            existing = f.read()
+        if _AGENT_INSTRUCTIONS_MARKER in existing:
+            typer.echo(f"  '{target}' already contains CodeEmbed instructions, skipping.")
+            return
+        with open(target, "a", encoding="utf-8") as f:
+            f.write("\n" + _AGENT_INSTRUCTIONS_CONTENT)
+        typer.echo(f"  Appended CodeEmbed search instructions to '{target}'.")
+    else:
+        parent = os.path.dirname(target)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        with open(target, "w", encoding="utf-8") as f:
+            f.write(_AGENT_INSTRUCTIONS_CONTENT)
+        typer.echo(f"  Created '{target}' with CodeEmbed search instructions.")
+
+
 def _add_to_github_copilot() -> None:
     vscode_mcp_path = os.path.join(".vscode", "mcp.json")
 
@@ -336,10 +376,17 @@ def init():
     if typer.confirm("Add CodeEmbed to GitHub Copilot? (creates/updates .vscode/mcp.json)", default=False):
         _add_to_github_copilot()
 
+    if typer.confirm(
+        "Add CodeEmbed search instructions to AGENTS.md? (or existing CLAUDE.md / .github/copilot-instructions.md)",
+        default=True,
+    ):
+        _add_agent_instructions()
+
     typer.echo(
         "\nDone.\n\n"
-        "Tip: Run 'codeembed embed' once before starting the server to pre-populate\n"
-        "the index — searches will return nothing until at least one embed run completes.\n\n"
+        "Tip: Run 'codeembed embed' before starting the server to pre-populate the index.\n"
+        "The server also embeds in the background automatically, but searches will return\n"
+        "empty results until the first file is embedded.\n\n"
         "Then run 'codeembed serve' to start the MCP server."
     )
 
