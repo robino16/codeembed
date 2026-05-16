@@ -132,12 +132,15 @@ def _get_llm_service() -> LLMServiceBase:
     # ----------------------------------------------------------
     # Azure OpenAI with RBAC / Entra ID
     #
-    # Supports:
-    # - az login
+    # DefaultAzureCredential tries these in order:
+    # - Environment / service principal (AZURE_CLIENT_ID etc.)
+    # - Workload Identity
     # - Managed Identity
-    # - VSCode Azure login
-    # - workload identity federation
-    # - service principals
+    # - VS Code Azure sign-in
+    # - Azure CLI (az login)
+    # - Azure PowerShell (Connect-AzAccount)
+    # - Azure Developer CLI (azd auth login)
+    # - Interactive browser (last resort; enabled via exclude_interactive_browser_credential=False)
     # ----------------------------------------------------------
     #
     if azure_openai_endpoint:
