@@ -1,11 +1,37 @@
 from typing import Dict, List
 
 from codeembed.graph_db.base import GraphDbBase
+from codeembed.graph_db.models import Subgraph
 from codeembed.utils.string_utils import truncate_string
 from codeembed.vector_db.base import VectorDbBase
-from codeembed.vector_db.models import Chunk
+from codeembed.vector_db.models import Chunk, SearchResult
 
 _GRAPH_WEIGHT = 0.5
+
+
+def _rerank(
+    search_results: List[SearchResult],
+    graph_results: Subgraph,
+    graph_chunks: List[Chunk],
+) -> List[Chunk]:
+    chunk_id_to_depth: Dict[str, int] = {}
+    for edge in graph_results.edges:
+        depth = graph_results.depths.get(edge.source)
+        if depth is None:
+            continue
+        chunk_id = str(edge.chunk_id)
+        if chunk_id not in chunk_id_to_depth or depth < chunk_id_to_depth[chunk_id]:
+            chunk_id_to_depth[chunk_id] = depth
+
+    score_by_chunk_id: Dict[str, float] = {}
+    for r in search_results:
+        score_by_chunk_id[str(r.chunk.id)] = 1.0 / (1.0 + r.score)
+    for chunk_id, depth in chunk_id_to_depth.items():
+        score_by_chunk_id[chunk_id] = score_by_chunk_id.get(chunk_id, 0.0) + _GRAPH_WEIGHT / (depth + 1)
+
+    all_chunks: Dict[str, Chunk] = {str(r.chunk.id): r.chunk for r in search_results}
+    all_chunks.update({str(c.id): c for c in graph_chunks})
+    return sorted(all_chunks.values(), key=lambda c: score_by_chunk_id.get(str(c.id), 0.0), reverse=True)
 
 
 class DocSearchService:
@@ -40,30 +66,7 @@ class DocSearchService:
         )
         graph_chunks = self._vector_db.get_chunks(graph_chunk_ids)
 
-        # Build chunk_id -> minimum graph depth via edge source depths.
-        # Minimum depth means a chunk reachable via two paths gets the closer score.
-        chunk_id_to_depth: Dict[str, int] = {}
-        for edge in graph_results.edges:
-            depth = graph_results.depths.get(edge.source)
-            if depth is None:
-                continue
-            chunk_id = str(edge.chunk_id)
-            if chunk_id not in chunk_id_to_depth or depth < chunk_id_to_depth[chunk_id]:
-                chunk_id_to_depth[chunk_id] = depth
-
-        # Combine semantic score + graph bonus (higher = better).
-        # Semantic: convert distance to similarity via 1/(1+d), range (0, 1].
-        # Graph bonus: _GRAPH_WEIGHT / (depth + 1) — depth 0 = 0.5, depth 1 = 0.25, depth 2 = 0.167.
-        score_by_chunk_id: Dict[str, float] = {}
-        for r in search_results:
-            score_by_chunk_id[str(r.chunk.id)] = 1.0 / (1.0 + r.score)
-        for chunk_id, depth in chunk_id_to_depth.items():
-            score_by_chunk_id[chunk_id] = score_by_chunk_id.get(chunk_id, 0.0) + _GRAPH_WEIGHT / (depth + 1)
-
-        # Merge semantic + graph chunks and sort by combined score descending.
-        all_chunks: Dict[str, Chunk] = {str(r.chunk.id): r.chunk for r in search_results}
-        all_chunks.update({str(c.id): c for c in graph_chunks})
-        ranked_chunks = sorted(all_chunks.values(), key=lambda c: score_by_chunk_id.get(str(c.id), 0.0), reverse=True)
+        ranked_chunks = _rerank(search_results, graph_results, graph_chunks)
 
         # Collect all node IDs represented in ranked chunks for edge filtering.
         ranked_node_ids = set(node_id for chunk in ranked_chunks for node_id in chunk.graph_node_ids)
