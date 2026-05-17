@@ -38,6 +38,9 @@ class FakeVectorDb(VectorDbBase):
     def delete_chunks(self, *args, **kwargs):
         raise NotImplementedError()
 
+    def get_chunks(self, *args, **kwargs):
+        raise NotImplementedError()
+
 
 def test_detects_new_document():
     now = utc_now()
@@ -51,7 +54,7 @@ def test_detects_new_document():
     vector_db = FakeVectorDb([])
 
     dc = DeltaComputer(doc_provider, vector_db, debounce_seconds=0)
-    to_delete, to_update = dc.compute_deltas()
+    to_delete, to_update, _ = dc.compute_deltas()
 
     assert to_delete == set()
     assert to_update == {"file1.txt"}
@@ -79,7 +82,7 @@ def test_detects_deleted_document():
     )
 
     dc = DeltaComputer(doc_provider, vector_db)
-    to_delete, to_update = dc.compute_deltas()
+    to_delete, to_update, _ = dc.compute_deltas()
 
     assert to_delete == {chunk_id}
     assert to_update == set()
@@ -113,7 +116,7 @@ def test_detects_updated_document():
     )
 
     dc = DeltaComputer(doc_provider, vector_db, debounce_seconds=0)
-    to_delete, to_update = dc.compute_deltas()
+    to_delete, to_update, _ = dc.compute_deltas()
 
     assert to_delete == {chunk_id}
     assert to_update == {"file1.txt"}

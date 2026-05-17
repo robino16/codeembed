@@ -249,7 +249,7 @@ class DocEmbedder:
                             properties={
                                 "line_start": segment.line_start,
                                 "line_end": segment.line_end,
-                                "modified_at": doc.modified_at,
+                                "modified_at": doc.modified_at.isoformat(),
                                 "file_sha256_checksum": doc.sha256_checksum,
                             },
                         )
