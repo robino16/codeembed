@@ -61,7 +61,7 @@ This <segment type> is ...
 
     result = llm_service.generate_response(messages, llm_model, max_tokens=1024, temperature=0.3)
 
-    logger.info("Generated summary for segment in file %s: %s", file_path, result.response)
+    logger.info("Generated summary for segment in file %s. Length: %d", file_path, len(result.response))
 
     return result.response
 
@@ -153,13 +153,25 @@ Return STRICT JSON:
         },
     ]
 
-    result = llm_service.generate_structured_output(
-        messages=messages,
-        llm_model=llm_model,
-        output_format=_GraphOutput,
-        max_tokens=512,
-        temperature=0.1,
-    )
+    try:
+        result = llm_service.generate_structured_output(
+            messages=messages,
+            llm_model=llm_model,
+            output_format=_GraphOutput,
+            max_tokens=512,
+            temperature=0.1,
+        )
+    except Exception as e:
+        logger.warning(
+            "Failed to extract graph relations for segment in '%s' (lines %s-%s): %s",
+            file_path,
+            segment.line_start,
+            segment.line_end,
+            e,
+        )
+        return []
+
+    logger.info("Extracted %d graph edges for segment in file %s.", len(result.data.edges), file_path)
 
     return [_normalize_edge(edge) for edge in result.data.edges]
 
