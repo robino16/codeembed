@@ -29,7 +29,13 @@ def _summarize_chunk_with_llm(
     # NOTE: For markdown files we could embed directly without LLM summarization.
     #       Just split on ## headers.
 
-    logger.info("Summarizing segment %s in file %s...", segment.content.split("\n")[0], file_path)
+    logger.info(
+        "Summarizing segment %s in file %s:%d-%d...",
+        segment.content.split("\n")[0],
+        file_path,
+        segment.line_start,
+        segment.line_end,
+    )
 
     messages: List[ChatMessage] = [
         {"role": "system", "content": "You are an expert at describing code."},
@@ -92,6 +98,14 @@ def _find_graph_relations_with_llm(
     llm_model: str,
     summary: str,
 ) -> List[_Edge]:
+
+    logger.info(
+        "Extracting graph relations for segment %s in file %s:%d-%d...",
+        segment.content.split("\n")[0],
+        file_path,
+        segment.line_start,
+        segment.line_end,
+    )
 
     messages: List[ChatMessage] = [
         {
