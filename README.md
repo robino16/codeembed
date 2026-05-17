@@ -176,7 +176,7 @@ The MCP server exposes a single `search(query)` tool for semantic search over yo
 Clone this repo with:
 
 ```bash
-git@github.com:robino16/codeembed.git
+git clone git@github.com:robino16/codeembed.git
 ```
 
 ```bash
