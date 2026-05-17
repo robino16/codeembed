@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Iterator, List, Optional
 from uuid import UUID
 
-from codeembed.vector_db.models import Chunk
+from codeembed.vector_db.models import Chunk, SearchResult
 
 
 class VectorDbBase(ABC):
@@ -11,7 +11,7 @@ class VectorDbBase(ABC):
         pass
 
     @abstractmethod
-    def search(self, query: str, top_n: int) -> List[Chunk]:
+    def search(self, query: str, top_n: int) -> List[SearchResult]:
         """Vector search. Returns top_n most relevant results."""
 
     @abstractmethod
@@ -21,6 +21,10 @@ class VectorDbBase(ABC):
 
         For simplicity exposes 'where' argument which is a ChromaDB specific filter.
         """
+
+    @abstractmethod
+    def get_chunks(self, chunk_ids: List[UUID]) -> List[Chunk]:
+        pass
 
     @abstractmethod
     def delete_chunks(self, chunk_ids: List[UUID]) -> None:

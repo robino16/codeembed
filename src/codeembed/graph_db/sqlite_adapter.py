@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from typing import List, Optional, Set
+from uuid import UUID
 
 from codeembed.graph_db.base import GraphDbBase
 from codeembed.graph_db.models import Edge, Subgraph
@@ -37,7 +38,7 @@ class SqlLiteGraphDb(GraphDbBase):
             placeholders = ",".join(["?"] * len(frontier))
 
             query = f"""
-                SELECT source, target, relation, file_path
+                SELECT source, target, relation, file_path, chunk_id, properties
                 FROM edges
                 WHERE source IN ({placeholders})
             """
@@ -54,8 +55,18 @@ class SqlLiteGraphDb(GraphDbBase):
 
             next_frontier = set()
 
-            for src, tgt, rel, file_path in rows:
-                edges.append(Edge(source=src, target=tgt, relation=rel, file_path=file_path))
+            for src, tgt, rel, file_path, chunk_id, properties in rows:
+                _properties = json.loads(properties) if properties else {}
+                edges.append(
+                    Edge(
+                        source=src,
+                        target=tgt,
+                        relation=rel,
+                        file_path=file_path,
+                        chunk_id=UUID(chunk_id),
+                        properties=_properties,
+                    )
+                )
                 if tgt not in visited:
                     next_frontier.add(tgt)
                     depths[tgt] = depth
@@ -72,12 +83,14 @@ class SqlLiteGraphDb(GraphDbBase):
 
     def add_edge(self, edge: Edge):
         self._cur.execute(
-            "INSERT OR REPLACE INTO edges (source, target, relation, file_path, properties) VALUES (?, ?, ?, ?, ?)",
+            "INSERT OR REPLACE INTO edges (source, target, relation, file_path, chunk_id, properties) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
             (
                 edge.source,
                 edge.target,
                 edge.relation,
                 edge.file_path,
+                str(edge.chunk_id),
                 json.dumps(edge.properties),
             ),
         )
@@ -116,6 +129,7 @@ class SqlLiteGraphDb(GraphDbBase):
                 target TEXT,
                 relation TEXT,
                 file_path TEXT,
+                chunk_id TEXT,
                 properties TEXT,
                 PRIMARY KEY (source, target, relation)
             )

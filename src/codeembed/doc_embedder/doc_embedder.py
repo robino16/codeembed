@@ -76,6 +76,14 @@ class _GraphOutput(BaseModel):
     edges: List[_Edge]  # source, relation, target
 
 
+def _normalize_edge(edge: _Edge) -> _Edge:
+    return _Edge(
+        source=edge.source.strip(),
+        relation=edge.relation.strip().upper().replace(" ", "_"),
+        target=edge.target.strip(),
+    )
+
+
 def _find_graph_relations_with_llm(
     llm_service: LLMServiceBase,
     segment: FileSegment,
@@ -89,46 +97,49 @@ def _find_graph_relations_with_llm(
         {
             "role": "system",
             "content": (
-                "You extract code relationships from a codebase.\n"
-                "Return ONLY structured edges.\n\n"
-                "Rules:\n"
-                "- Only output relations explicitly supported by the code\n"
-                "- Use full file context to resolve references\n"
+                "You extract relationships from code or text and return structured graph edges.\n\n"
+                "Node ID format rules — follow these exactly:\n"
+                "- Class method:       ClassName.method_name         e.g. AuthService.login\n"
+                "- Class:              ClassName                     e.g. AuthService\n"
+                "- Module-level func:  function_name                 e.g. jwt_decode\n"
+                "- Module/file:        module_name                   e.g. utils, auth.helpers\n"
+                "- Concept/topic:      lowercase_snake_case          e.g. user_authentication\n\n"
+                "Relation format rules:\n"
+                "- UPPER_SNAKE_CASE always                           e.g. CALLS, IMPORTS, EXTENDS, IMPLEMENTS, USES\n\n"
+                "Other rules:\n"
+                "- Only output relations explicitly present in the code or text\n"
+                "- Use full file context to resolve ambiguous references\n"
                 "- Do NOT invent nodes or relations\n"
-                "- Focus on: calls, uses, imports, implements, extends\n"
-                "- Ignore trivial variable-level references\n"
+                "- Ignore trivial variable assignments and local-only references\n"
             ),
         },
         {
             "role": "user",
             "content": f"""
-<File Path>
-{file_path}
-</File Path>
+<FilePath>{file_path}</FilePath>
 
-<File Summary>
+<FileSummary>
 {summary}
-</File Summary>
+</FileSummary>
 
-<Full File Content>
+<FullFileContent>
 {full_content}
-</Full File Content>
+</FullFileContent>
 
-<Segment>
-<Line Start>{segment.line_start}</Line Start>
-<Line End>{segment.line_end}</Line End>
-
-<Content>
+<Segment lines="{segment.line_start}-{segment.line_end}">
 {segment.content}
-</Content>
 </Segment>
 
-Task:
-Extract graph relations ONLY from the Segment,
-but use Full File Content for context/disambiguation.
+Extract graph relations from the Segment only (use FullFileContent for context/disambiguation).
+
+Examples of correct output:
+  AuthService.login CALLS UserRepository.find_by_email
+  AuthService.login CALLS JwtService.sign
+  AuthService IMPORTS jwt_decode
+  UserRepository EXTENDS BaseRepository
+  DocEmbedder.embed_codebase USES FileSplitter
 
 Return STRICT JSON:
-
 {{
   "edges": [
     {{
@@ -150,7 +161,7 @@ Return STRICT JSON:
         temperature=0.1,
     )
 
-    return result.data.edges
+    return [_normalize_edge(edge) for edge in result.data.edges]
 
 
 class DocEmbedder:
@@ -234,10 +245,10 @@ class DocEmbedder:
                             relation=edge.relation,
                             target=edge.target,
                             file_path=file,
+                            chunk_id=chunk.id,
                             properties={
                                 "line_start": segment.line_start,
                                 "line_end": segment.line_end,
-                                "chunk_id": str(chunk.id),
                                 "modified_at": doc.modified_at,
                                 "file_sha256_checksum": doc.sha256_checksum,
                             },

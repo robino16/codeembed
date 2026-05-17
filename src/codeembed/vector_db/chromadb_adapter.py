@@ -7,7 +7,7 @@ import chromadb
 from chromadb.api.types import Metadata, QueryResult
 
 from codeembed.vector_db.base import VectorDbBase
-from codeembed.vector_db.models import Chunk
+from codeembed.vector_db.models import Chunk, SearchResult
 
 T = TypeVar("T")
 
@@ -41,7 +41,7 @@ class ChromaDbAdapter(VectorDbBase):
             metadatas=metadatas,
         )
 
-    def search(self, query: str, top_n: int) -> List[Chunk]:
+    def search(self, query: str, top_n: int) -> List[SearchResult]:
         # TODO: Support filtering.
         results: QueryResult = self._collection.query(
             query_texts=[query],
@@ -51,8 +51,9 @@ class ChromaDbAdapter(VectorDbBase):
         ids = results["ids"][0]
         docs = results["documents"][0]  # type: ignore
         metas = results["metadatas"][0]  # type: ignore
+        distances = results["distances"][0]  # type: ignore
 
-        chunks_out: List[Chunk] = []
+        chunks_out: List[SearchResult] = []
 
         for i in range(len(ids)):
             # Can be simplified by adding a "get_safe_val" or similar.
@@ -65,16 +66,19 @@ class ChromaDbAdapter(VectorDbBase):
             file_sha256_checksum = self._get_safe_val(metas[i], "file_sha256_checksum", str)
             graph_node_ids = self._get_safe_list_val(metas[i], "graph_node_ids", str, allow_none=True)
             chunks_out.append(
-                Chunk(
-                    id=UUID(ids[i]),
-                    content=docs[i],
-                    modified_at=modified_at,
-                    file_path=file_path,
-                    line_start=line_start,
-                    line_end=line_end,
-                    raw_code=raw_code,
-                    file_sha256_checksum=file_sha256_checksum,
-                    graph_node_ids=graph_node_ids,
+                SearchResult(
+                    chunk=Chunk(
+                        id=UUID(ids[i]),
+                        content=docs[i],
+                        modified_at=modified_at,
+                        file_path=file_path,
+                        line_start=line_start,
+                        line_end=line_end,
+                        raw_code=raw_code,
+                        file_sha256_checksum=file_sha256_checksum,
+                        graph_node_ids=graph_node_ids,
+                    ),
+                    score=distances[i],
                 )
             )
 
@@ -122,6 +126,42 @@ class ChromaDbAdapter(VectorDbBase):
                 )
 
             offset += limit
+
+    def get_chunks(self, chunk_ids: List[UUID]) -> List[Chunk]:
+        str_chunk_ids = [str(chunk_id) for chunk_id in chunk_ids]
+        results = self._collection.get(ids=str_chunk_ids)
+
+        ids = results["ids"]
+        docs = results["documents"] or []
+        metas = results["metadatas"] or []
+
+        chunks_out: List[Chunk] = []
+
+        for i in range(len(ids)):
+            # Can be simplified by adding a "get_safe_val" or similar.
+            modified_at = self._get_safe_val(metas[i], "modified_at", str)
+            modified_at = datetime.fromisoformat(modified_at)
+            file_path = self._get_safe_val(metas[i], "file_path", str)
+            line_start = self._get_safe_val(metas[i], "line_start", int)
+            line_end = self._get_safe_val(metas[i], "line_end", int)
+            raw_code = self._get_safe_val(metas[i], "raw_code", str, allow_none=True)
+            file_sha256_checksum = self._get_safe_val(metas[i], "file_sha256_checksum", str)
+            graph_node_ids = self._get_safe_list_val(metas[i], "graph_node_ids", str, allow_none=True)
+            chunks_out.append(
+                Chunk(
+                    id=UUID(ids[i]),
+                    content=docs[i],
+                    modified_at=modified_at,
+                    file_path=file_path,
+                    line_start=line_start,
+                    line_end=line_end,
+                    raw_code=raw_code,
+                    file_sha256_checksum=file_sha256_checksum,
+                    graph_node_ids=graph_node_ids,
+                )
+            )
+
+        return chunks_out
 
     def delete_chunks(self, chunk_ids: List[UUID]) -> None:
         # Maybe batch if list is very long? I hope ChromaDB does so internally.

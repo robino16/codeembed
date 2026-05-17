@@ -15,3 +15,9 @@ class Chunk:
     raw_code: Optional[str]
     file_sha256_checksum: str
     graph_node_ids: List[str] = field(default_factory=list)
+
+
+@dataclass
+class SearchResult:
+    chunk: Chunk
+    score: float

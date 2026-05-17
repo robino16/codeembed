@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
+from uuid import UUID
 
 
 @dataclass
@@ -8,6 +9,7 @@ class Edge:
     target: str
     relation: str
     file_path: str
+    chunk_id: UUID
     properties: Dict[str, Any] = field(default_factory=dict)
 
 

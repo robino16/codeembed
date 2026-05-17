@@ -37,7 +37,8 @@ def get_graph_db() -> SqlLiteGraphDb:
 @lru_cache(maxsize=1)
 def get_search_service() -> DocSearchService:
     vector_db = get_vector_db()
-    search_service = DocSearchService(vector_db)
+    graph_db = get_graph_db()
+    search_service = DocSearchService(vector_db, graph_db)
     return search_service
 
 
