@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 
@@ -14,3 +14,4 @@ class Chunk:
     line_end: int
     raw_code: Optional[str]
     file_sha256_checksum: str
+    graph_node_ids: List[str] = field(default_factory=list)

@@ -15,7 +15,7 @@ class DeltaComputer:
         self._vector_db = vector_db
         self._debounce_seconds = debounce_seconds
 
-    def compute_deltas(self) -> Tuple[Set[UUID], Set[str]]:
+    def compute_deltas(self) -> Tuple[Set[UUID], Set[str], Set[str]]:
         """
         Returns chunk IDs to delete and file paths to process.
 
@@ -26,6 +26,7 @@ class DeltaComputer:
 
         file_path_to_chunk_ids: Dict[str, List[UUID]] = {}
         chunk_ids_to_delete: Set[UUID] = set()
+        file_paths_to_delete: Set[str] = set()
 
         # Collect modified_at stored in our database.
         old_modified_at: Dict[str, datetime] = {}
@@ -71,5 +72,6 @@ class DeltaComputer:
             if file_path not in current:
                 for chunk_id in file_path_to_chunk_ids.get(file_path, []):
                     chunk_ids_to_delete.add(chunk_id)
+                file_paths_to_delete.add(file_path)
 
-        return chunk_ids_to_delete, file_paths_to_update
+        return chunk_ids_to_delete, file_paths_to_update, file_paths_to_delete
