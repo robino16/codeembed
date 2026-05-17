@@ -115,17 +115,22 @@ def _find_graph_relations_with_llm(
                 "Node ID format rules — follow these exactly:\n"
                 "- Class method:       ClassName.method_name         e.g. AuthService.login\n"
                 "- Class:              ClassName                     e.g. AuthService\n"
-                "- Module-level func:  function_name                 e.g. jwt_decode\n"
-                "- Module/file:        module_name                   e.g. utils, auth.helpers\n"
-                "- Concept/topic:      lowercase_snake_case          e.g. user_authentication\n\n"
-                "Relation format rules:\n"
-                "- UPPER_SNAKE_CASE always                           e.g. CALLS, IMPORTS, EXTENDS, IMPLEMENTS, USES\n\n"
+                "- Module-level func:  function_name                 e.g. jwt_decode\n\n"
+                "Allowed relations (use ONLY these):\n"
+                "- CALLS        — a function or method invokes another\n"
+                "- EXTENDS      — a class inherits from another\n"
+                "- IMPLEMENTS   — a class implements an interface or abstract base\n\n"
+                "Forbidden:\n"
+                "- Never emit IMPORTS edges — import statements are visible in the raw code and add no value\n"
+                "- Never emit USES edges\n"
+                "- Never use module paths (e.g. codeembed.llm.models) as node IDs — always prefer the class or "
+                "function name\n\n"
                 "Other rules:\n"
                 "- Only output relations explicitly present in the code or text\n"
                 "- Use full file context to resolve ambiguous references\n"
                 "- Do NOT invent nodes or relations\n"
                 "- Ignore trivial variable assignments and local-only references\n"
-                "- Node IDs must be real code symbols (class names, function names, module paths) — NEVER string "
+                "- Node IDs must be real code symbols (class names, function names) — NEVER string "
                 "literals, single letters, placeholder values, or test input data\n"
             ),
         },
@@ -151,9 +156,8 @@ Extract graph relations from the Segment only (use FullFileContent for context/d
 Examples of correct output:
   AuthService.login CALLS UserRepository.find_by_email
   AuthService.login CALLS JwtService.sign
-  AuthService IMPORTS jwt_decode
   UserRepository EXTENDS BaseRepository
-  DocEmbedder.embed_codebase USES FileSplitter
+  OllamaLLMService IMPLEMENTS LLMServiceBase
 
 Return STRICT JSON:
 {{
