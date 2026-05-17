@@ -23,10 +23,6 @@ class GraphDbBase(ABC):
     # ------------------------
 
     @abstractmethod
-    def delete_node(self, node_id: str) -> None:
-        pass
-
-    @abstractmethod
     def add_edge(self, edge: Edge) -> None:
         pass
 

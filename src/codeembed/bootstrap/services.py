@@ -10,6 +10,7 @@ from codeembed.cost_tracking.models import Session
 from codeembed.doc_embedder.doc_embedder import DocEmbedder
 from codeembed.doc_provider.local_doc_provider import LocalDocProvider
 from codeembed.doc_search_service.doc_search_service import DocSearchService
+from codeembed.graph_db.sqlite_adapter import SqlLiteGraphDb
 from codeembed.llm.base import LLMServiceBase
 from codeembed.llm.ollama_adapter import OllamaLLMService
 from codeembed.vector_db.chromadb_adapter import ChromaDbAdapter
@@ -24,8 +25,18 @@ _DEFAULT_SLEEP_INTERVAL = 60
 
 
 @lru_cache(maxsize=1)
+def get_vector_db() -> ChromaDbAdapter:
+    return ChromaDbAdapter(collection_name="codebase")
+
+
+@lru_cache(maxsize=1)
+def get_graph_db() -> SqlLiteGraphDb:
+    return SqlLiteGraphDb(db_path=".codeembed/graph.db")
+
+
+@lru_cache(maxsize=1)
 def get_search_service() -> DocSearchService:
-    vector_db = ChromaDbAdapter(collection_name="codebase")
+    vector_db = get_vector_db()
     search_service = DocSearchService(vector_db)
     return search_service
 
@@ -195,10 +206,11 @@ def get_embedder_service() -> DocEmbedder:
         base_path=".",
         supported_file_extensions=_SUPPORTED_FILE_EXTENSIONS,
     )
-    vector_db = ChromaDbAdapter(collection_name="codebase")
+    vector_db = get_vector_db()
     llm_service = get_llm_service()
+    graph_db = get_graph_db()
     embedder = DocEmbedder(
-        doc_provider, vector_db, llm_service, llm_model=config.llm_model, debounce_seconds=config.debounce
+        doc_provider, vector_db, graph_db, llm_service, llm_model=config.llm_model, debounce_seconds=config.debounce
     )
     return embedder
 
