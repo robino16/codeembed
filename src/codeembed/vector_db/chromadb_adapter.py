@@ -43,9 +43,12 @@ class ChromaDbAdapter(VectorDbBase):
 
     def search(self, query: str, top_n: int) -> List[SearchResult]:
         # TODO: Support filtering.
+        count = self._collection.count()
+        if count == 0:
+            return []
         results: QueryResult = self._collection.query(
             query_texts=[query],
-            n_results=top_n,
+            n_results=min(top_n, count),
         )
 
         ids = results["ids"][0]
@@ -128,6 +131,8 @@ class ChromaDbAdapter(VectorDbBase):
             offset += limit
 
     def get_chunks(self, chunk_ids: List[UUID]) -> List[Chunk]:
+        if not chunk_ids:
+            return []
         str_chunk_ids = [str(chunk_id) for chunk_id in chunk_ids]
         results = self._collection.get(ids=str_chunk_ids)
 

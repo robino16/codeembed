@@ -419,6 +419,18 @@ def serve():
 
 
 @app.command()
+def search(
+    query: str = typer.Argument(..., help="Natural-language search query"),
+    top_n: int = typer.Option(10, "--top-n", "-n", help="Number of results to return"),
+):
+    """Search the embedded codebase using semantic similarity."""
+    from codeembed.bootstrap.services import get_search_service
+
+    result = get_search_service().search(query, top_n)
+    typer.echo(result)
+
+
+@app.command()
 def embed():
     """Embed codebase into the vector database."""
     if not os.path.isfile(_CONFIG_FILE):
