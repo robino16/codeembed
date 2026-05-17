@@ -1,6 +1,6 @@
 # CodeEmbed
 
-Embeds your codebase into a local vector database and exposes it as an MCP tool, giving AI assistants like Claude Code fast semantic search over your code.
+Embeds your codebase into a local vector and graph database and exposes it as an MCP tool, giving AI assistants like Claude Code fast semantic search over your code using Graph RAG.
 
 Particularly useful for questions like:
 
@@ -12,7 +12,7 @@ For other questions, the agent will fall back to normal lookups.
 CodeEmbed can improve lookup speed and accuracy, especially for finding existing implementations before writing new ones.
 Note that the biggest bottleneck in coding agents is LLM thinking and token generation — solid prompts and follow-up questions still matter.
 
-Uses [ChromaDB](https://github.com/chroma-core/chroma) for local vector storage and either [Ollama](https://github.com/ollama/ollama) or OpenAI (including OpenAI models via Azure AI Foundry) for LLM analysis.
+Uses [ChromaDB](https://github.com/chroma-core/chroma) for vector storage, SQLite for graph storage, and either [Ollama](https://github.com/ollama/ollama) or OpenAI (including OpenAI models via Azure AI Foundry) for LLM analysis.
 
 ## Prerequisites
 
