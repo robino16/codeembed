@@ -111,6 +111,8 @@ def _find_graph_relations_with_llm(
                 "- Use full file context to resolve ambiguous references\n"
                 "- Do NOT invent nodes or relations\n"
                 "- Ignore trivial variable assignments and local-only references\n"
+                "- Node IDs must be real code symbols (class names, function names, module paths) — NEVER string "
+                "literals, single letters, placeholder values, or test input data\n"
             ),
         },
         {

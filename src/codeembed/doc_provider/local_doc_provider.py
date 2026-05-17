@@ -6,7 +6,7 @@ from typing import Iterator, List
 from codeembed.doc_provider.base import DocProviderBase
 from codeembed.doc_provider.models import DocumentContent, DocumentMeta
 
-_SKIP_DIRS = frozenset({"venv", ".venv", "node_modules", "dist", "build"})
+_SKIP_DIRS = frozenset({"venv", ".venv", "node_modules", "dist", "build", "tests"})
 _SKIP_FILES = frozenset({"__init__.py", ".env", ".env.local", "appsettings.json", "appsettings.Development.json"})
 
 
