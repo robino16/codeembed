@@ -1,6 +1,6 @@
 [project]
 name = "codeembed"
-version = "0.1.0"
+version = "0.1.1"
 description = "Embeds your codebase and makes it available for quick LLM lookups via MCP."
 readme = "README.md"
 requires-python = ">=3.11"
