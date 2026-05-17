@@ -65,7 +65,7 @@ This <segment type> is ...
         },
     ]
 
-    result = llm_service.generate_response(messages, llm_model, max_tokens=1024, temperature=0.3)
+    result = llm_service.generate_response(messages, llm_model, max_tokens=4096, temperature=0.3)
 
     logger.info("Generated summary for segment in file %s. Length: %d", file_path, len(result.response))
 
@@ -174,7 +174,7 @@ Return STRICT JSON:
             messages=messages,
             llm_model=llm_model,
             output_format=_GraphOutput,
-            max_tokens=512,
+            max_tokens=4096,
             temperature=0.1,
         )
     except Exception as e:
