@@ -10,6 +10,8 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class LLMServiceWithCostTracking(LLMServiceBase):
+    """Wrapper for LLM service that tracks token usage."""
+
     def __init__(self, llm_service: LLMServiceBase, session: Session) -> None:
         self._llm_service = llm_service
         self._session = session

@@ -10,6 +10,8 @@ _SESSIONS_DIR = ".codeembed/sessions"
 
 
 class Session:
+    """Writes token usage to a file under `.codeembed/sessions/<timestamp>.json`"""
+
     def __init__(self):
         self._by_model: _SessionData = {}
         self._session_id = utc_now().strftime("%Y-%m-%dT%H-%M-%S")
