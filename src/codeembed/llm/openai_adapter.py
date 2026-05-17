@@ -1,12 +1,14 @@
-from typing import List, Optional, Type, TypeVar, cast
+from __future__ import annotations
 
-from openai import OpenAI
-from openai._types import omit
-from openai.types.chat import ChatCompletionMessageParam
+from typing import TYPE_CHECKING, List, Optional, Type, TypeVar, cast
+
 from pydantic import BaseModel
 
 from codeembed.llm.base import LLMServiceBase
 from codeembed.llm.models import ChatMessage, LLMResponse, StructuredLLMResponse
+
+if TYPE_CHECKING:
+    from openai import OpenAI
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -23,6 +25,8 @@ class OpenAILLMService(LLMServiceBase):
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
     ) -> StructuredLLMResponse[T]:
+        from openai._types import omit
+        from openai.types.chat import ChatCompletionMessageParam
 
         openai_messages = cast(List[ChatCompletionMessageParam], messages)
 
@@ -61,6 +65,8 @@ class OpenAILLMService(LLMServiceBase):
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
     ) -> LLMResponse:
+        from openai._types import omit
+        from openai.types.chat import ChatCompletionMessageParam
 
         openai_messages = cast(List[ChatCompletionMessageParam], messages)
 
