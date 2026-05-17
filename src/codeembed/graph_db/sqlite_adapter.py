@@ -7,7 +7,7 @@ from codeembed.graph_db.base import GraphDbBase
 from codeembed.graph_db.models import Edge, Subgraph
 
 
-class SqlLiteGraphDb(GraphDbBase):
+class SqliteGraphDb(GraphDbBase):
     def __init__(self, db_path: str):
         self._conn = sqlite3.connect(db_path)
         self._cur = self._conn.cursor()
@@ -81,18 +81,14 @@ class SqlLiteGraphDb(GraphDbBase):
     # Edge operations
     # ------------------------
 
-    def add_edge(self, edge: Edge):
-        self._cur.execute(
+    def add_edge(self, edge: Edge) -> None:
+        self.add_edges([edge])
+
+    def add_edges(self, edges: List[Edge]) -> None:
+        self._cur.executemany(
             "INSERT OR REPLACE INTO edges (source, target, relation, file_path, chunk_id, properties) "
             "VALUES (?, ?, ?, ?, ?, ?)",
-            (
-                edge.source,
-                edge.target,
-                edge.relation,
-                edge.file_path,
-                str(edge.chunk_id),
-                json.dumps(edge.properties),
-            ),
+            [(e.source, e.target, e.relation, e.file_path, str(e.chunk_id), json.dumps(e.properties)) for e in edges],
         )
         self._conn.commit()
 
@@ -115,14 +111,6 @@ class SqlLiteGraphDb(GraphDbBase):
     # ------------------------
 
     def _initialize_schema(self):
-        self._conn.execute("""
-            CREATE TABLE IF NOT EXISTS nodes (
-                id TEXT PRIMARY KEY,
-                labels TEXT,
-                properties TEXT
-            )
-        """)
-
         self._conn.execute("""
             CREATE TABLE IF NOT EXISTS edges (
                 source TEXT,

@@ -1,11 +1,11 @@
 from uuid import uuid4
 
 from codeembed.graph_db.models import Edge
-from codeembed.graph_db.sqlite_adapter import SqlLiteGraphDb
+from codeembed.graph_db.sqlite_adapter import SqliteGraphDb
 
 
-def _db() -> SqlLiteGraphDb:
-    return SqlLiteGraphDb(":memory:")
+def _db() -> SqliteGraphDb:
+    return SqliteGraphDb(":memory:")
 
 
 def _edge(source: str, target: str, relation: str = "CALLS", file_path: str = "f.py") -> Edge:

@@ -293,8 +293,7 @@ class DocEmbedder:
                 num_skipped += 1
                 continue
             logger.info(f"Saving {len(edges)} edges to graph database.")
-            for edge in edges:
-                self._graph_db.add_edge(edge)
+            self._graph_db.add_edges(edges)
             logger.info(f"Saving {len(chunks)} chunks to vector database.")
             self._vector_db.add_chunks(chunks)
             num_processed += 1

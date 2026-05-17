@@ -10,7 +10,7 @@ from codeembed.cost_tracking.models import Session
 from codeembed.doc_embedder.doc_embedder import DocEmbedder
 from codeembed.doc_provider.local_doc_provider import LocalDocProvider
 from codeembed.doc_search_service.doc_search_service import DocSearchService
-from codeembed.graph_db.sqlite_adapter import SqlLiteGraphDb
+from codeembed.graph_db.sqlite_adapter import SqliteGraphDb
 from codeembed.llm.base import LLMServiceBase
 from codeembed.llm.ollama_adapter import OllamaLLMService
 from codeembed.vector_db.chromadb_adapter import ChromaDbAdapter
@@ -30,8 +30,8 @@ def get_vector_db() -> ChromaDbAdapter:
 
 
 @lru_cache(maxsize=1)
-def get_graph_db() -> SqlLiteGraphDb:
-    return SqlLiteGraphDb(db_path=".codeembed/graph.db")
+def get_graph_db() -> SqliteGraphDb:
+    return SqliteGraphDb(db_path=".codeembed/graph.db")
 
 
 @lru_cache(maxsize=1)

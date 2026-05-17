@@ -27,6 +27,10 @@ class GraphDbBase(ABC):
         pass
 
     @abstractmethod
+    def add_edges(self, edges: List[Edge]) -> None:
+        pass
+
+    @abstractmethod
     def delete_edges_by_file_path(self, file_path: str) -> None:
         pass
 
