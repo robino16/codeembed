@@ -222,10 +222,6 @@ class DocEmbedder:
             self._doc_provider, self._vector_db, self._debounce_seconds
         ).compute_deltas()
 
-        logger.info(f"Detected {len(chunks_ids_to_remove)} chunks to delete from vector database.")
-        logger.info(f"Detected {len(files_to_update)} files to process.")
-        logger.info(f"Detected {len(file_paths_to_delete)} files to delete.")
-
         if chunks_ids_to_remove:
             logger.info(f"Deleting {len(chunks_ids_to_remove)} chunks from vector database.")
             self._vector_db.delete_chunks(list(chunks_ids_to_remove))
@@ -233,6 +229,10 @@ class DocEmbedder:
         for file_path in files_to_update | file_paths_to_delete:
             logger.info(f"Deleting edges for file '{file_path}' from graph database.")
             self._graph_db.delete_edges_by_file_path(file_path)
+
+        if not files_to_update:
+            logger.info("No files to update. Embedding process is complete.")
+            return
 
         logger.info(f"Processing {len(files_to_update)} files...")
 
