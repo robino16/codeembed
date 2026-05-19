@@ -1,7 +1,15 @@
-# CodeEmbed
+<p align="center">
+  <img
+    src="https://raw.githubusercontent.com/robino16/codeembed/main/assets/logo.svg"
+    alt="codeembed"
+    width="420"
+  >
+</p>
 
-[![PyPi](https://img.shields.io/pypi/v/codeembed)](https://pypi.org/project/codeembed/)
-![Release Status](https://github.com/robino16/codeembed/actions/workflows/release.yml/badge.svg)
+<p align="center">
+  <a href="https://pypi.org/project/codeembed/"><img src="https://img.shields.io/pypi/v/codeembed" alt="PyPi"></a>
+  <img src="https://github.com/robino16/codeembed/actions/workflows/release.yml/badge.svg" alt="Release Status">
+</p>
 
 Embeds your codebase into a local vector and graph database and exposes it as an MCP tool, giving AI assistants like Claude Code fast semantic search over your code using Graph RAG.
 
