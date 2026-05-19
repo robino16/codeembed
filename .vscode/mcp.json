@@ -1,8 +1,10 @@
 {
   "servers": {
     "codeembed": {
-      "command": "uv",
-      "args": ["run", "codeembed", "serve"]
+      "command": "codeembed",
+      "args": [
+        "serve"
+      ]
     }
   }
 }

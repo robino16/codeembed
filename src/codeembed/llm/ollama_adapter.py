@@ -29,6 +29,9 @@ class OllamaLLMService(LLMServiceBase):
 
         data = resp["message"]["content"]
 
+        if not data or not data.strip():
+            raise ValueError(f"Ollama returned empty response for model '{llm_model}'")
+
         model = output_format.model_validate_json(data)
 
         return StructuredLLMResponse(

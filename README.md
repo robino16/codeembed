@@ -1,6 +1,9 @@
 # CodeEmbed
 
-Embeds your codebase into a local vector database and exposes it as an MCP tool, giving AI assistants like Claude Code fast semantic search over your code.
+[![PyPi](https://img.shields.io/pypi/v/codeembed)](https://pypi.org/project/codeembed/)
+![Release Status](https://github.com/robino16/codeembed/actions/workflows/release.yml/badge.svg)
+
+Embeds your codebase into a local vector and graph database and exposes it as an MCP tool, giving AI assistants like Claude Code fast semantic search over your code using Graph RAG.
 
 Particularly useful for questions like:
 
@@ -12,7 +15,7 @@ For other questions, the agent will fall back to normal lookups.
 CodeEmbed can improve lookup speed and accuracy, especially for finding existing implementations before writing new ones.
 Note that the biggest bottleneck in coding agents is LLM thinking and token generation — solid prompts and follow-up questions still matter.
 
-Uses [ChromaDB](https://github.com/chroma-core/chroma) for local vector storage and either [Ollama](https://github.com/ollama/ollama) or OpenAI (including OpenAI models via Azure AI Foundry) for LLM analysis.
+Uses [ChromaDB](https://github.com/chroma-core/chroma) for vector storage, SQLite for graph storage, and either [Ollama](https://github.com/ollama/ollama) or OpenAI (including OpenAI models via Azure AI Foundry) for LLM analysis.
 
 ## Prerequisites
 
@@ -39,8 +42,6 @@ uv tool install 'codeembed[openai]'
 > **Supply chain safety:** To reduce the risk of newly-published malicious packages, consider adding `exclude-newer = "7 days"` to your global [`uv.toml`](https://docs.astral.sh/uv/reference/settings/#exclude-newer). This prevents `uv` from installing packages published in the last 7 days.
 
 ### Manual installation (from source)
-
-If CodeEmbed is not published to PyPI, install it directly from source:
 
 ```bash
 git clone https://github.com/robino16/codeembed
@@ -87,18 +88,21 @@ CodeEmbed respects your project's `.gitignore` and also excludes typical environ
 
 **3. Start the MCP server:**
 
+**Note:** If the MCP server was added to Claude or GitHub Copilot during `codeembed init` your coding agent will do this step automatically.
+
 ```bash
 codeembed serve
 ```
 
 Starts the MCP server.
-If the MCP server is added to Claude or GitHub Copilot, you do not need to do this.
 
 The `serve` command will embed your codebase in the background - by default it will scan for changes every 60 seconds.
+This embedding interval can be configured in `codeembed.toml`.
+CodeEmbed will only process modified files.
 
 ## Configuring OpenAI
 
-If you use the OpenAI provider, credentials are read from environment variables. The recommended approach is a `.env` file. `codeembed init` will ask for the path, and it will be stored in `codeembed.toml` so `codeembed serve` and `codeembed embed` loads the `.env` file automatically.
+If you use the OpenAI provider, credentials are read from environment variables. The recommended approach is a `.env` file. `codeembed init` will ask for the path.
 
 ### Standard OpenAI
 
@@ -239,3 +243,7 @@ uv run twine check dist/*
 ```
 
 > `--no-sync` is required for local dev commands when the MCP server is running, as uv holds a lock that blocks sync operations.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
