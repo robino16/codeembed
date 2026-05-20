@@ -20,5 +20,14 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       - run: uv sync
       - run: uv pip check
-      - run: uv run pip-audit
+      # Waiting for fixes for vulnerabilities in ollama v0.6.1 and PyJWT v2.12.1
+      - run: |
+          uv run pip-audit \
+            --ignore-vuln PYSEC-2025-146 \
+            --ignore-vuln PYSEC-2025-144 \
+            --ignore-vuln PYSEC-2025-147 \
+            --ignore-vuln PYSEC-2025-145 \
+            --ignore-vuln PYSEC-2026-102 \
+            --ignore-vuln PYSEC-2026-101 \
+            --ignore-vuln PYSEC-2025-183
       - run: uv run pytest

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "codeembed": {
+      "type": "local",
+      "command": [
+        "uv",
+        "run",
+        "codeembed",
+        "serve"
+      ],
+      "enabled": true
+    }
+  }
+}
