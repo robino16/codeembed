@@ -212,6 +212,14 @@ def _select_provider() -> Literal["ollama", "openai"]:
     raise ValueError("Invalid index")  # should never happen
 
 
+def _is_opencode_installed() -> bool:
+    return shutil.which("opencode") is not None
+
+
+def _is_claude_code_installed() -> bool:
+    return shutil.which("claude") is not None
+
+
 def _ensure_model_downloaded(model: str, downloaded_models: list[str]) -> None:
     if model in downloaded_models:
         return
@@ -337,6 +345,35 @@ def _add_to_github_copilot() -> None:
     typer.echo(f"  Updated '{vscode_mcp_path}'.")
 
 
+def _add_to_opencode() -> None:
+    if os.path.isfile("opencode.jsonc"):
+        # I don't want to add an extra dependency just for parsing and writing JSONC.
+        typer.echo(
+            "Won't modify 'opencode.jsonc' as it is not a standard JSON file. "
+            "Please add the MCP server config to it manually. See README.md for details."
+        )
+        return
+
+    opencode_mcp_path = "opencode.json"
+    data: Dict[str, Any] = (
+        _read_json(opencode_mcp_path)
+        if os.path.isfile(opencode_mcp_path)
+        else {"$schema": "https://opencode.ai/config.json"}
+    )
+    if "mcp" not in data:
+        data["mcp"] = {}
+    data["mcp"].setdefault(
+        "codeembed",
+        {
+            "type": "local",
+            "command": ["uv", "run", "codeembed", "serve"],
+            "enabled": True,
+        },
+    )
+    _write_json(opencode_mcp_path, data)
+    typer.echo(f"  Updated '{opencode_mcp_path}'.")
+
+
 @app.command()
 def init():
     """Initialize CodeEmbed in the current project."""
@@ -368,13 +405,18 @@ def init():
     _write_config(model, provider, env_var_path)
 
     typer.echo("")
-    if typer.confirm(
-        "Add CodeEmbed to Claude Code? (creates/updates .mcp.json and .claude/settings.local.json)", default=True
-    ):
-        _add_to_claude_code()
-
     if typer.confirm("Add CodeEmbed to GitHub Copilot? (creates/updates .vscode/mcp.json)", default=False):
         _add_to_github_copilot()
+
+    if _is_claude_code_installed():
+        if typer.confirm(
+            "Add CodeEmbed to Claude Code? (creates/updates .mcp.json and .claude/settings.local.json)", default=True
+        ):
+            _add_to_claude_code()
+
+    if _is_opencode_installed():
+        if typer.confirm("Add CodeEmbed to OpenCode? (creates/updates opencode.json or opencode.jsonc)", default=False):
+            _add_to_opencode()
 
     if typer.confirm(
         "Add CodeEmbed search instructions to AGENTS.md? (or existing CLAUDE.md / .github/copilot-instructions.md)",
@@ -382,13 +424,16 @@ def init():
     ):
         _add_agent_instructions()
 
-    typer.echo(
-        "\nDone.\n\n"
-        "Tip: Run 'codeembed embed' before starting the server to pre-populate the index.\n"
-        "The server also embeds in the background automatically, but searches will return\n"
-        "empty results until the first file is embedded.\n\n"
-        "Then run 'codeembed serve' to start the MCP server."
-    )
+    if typer.confirm("Would you like to embed your codebase now? (recommended, can be time-consuming)", default=True):
+        embed()
+    else:
+        typer.echo(
+            "\n\nDone!\n"
+            "Tip: Run 'codeembed embed' to pre-populate the index (this may take a few minutes).\n"
+            "The server also embeds in the background when running.\n"
+            "Your coding agent should start the server automatically.\n"
+            "You can manually start the server with `codeembed serve`.\n"
+        )
 
 
 @app.command()
