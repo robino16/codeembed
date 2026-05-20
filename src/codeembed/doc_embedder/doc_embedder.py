@@ -1,10 +1,10 @@
 import logging
-from typing import List
+from typing import List, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel
-
 from codeembed.delta_computer.delta_computer import DeltaComputer
+from codeembed.doc_embedder.chunk_cache import ChunkCache
+from codeembed.doc_embedder.models import GraphAnalysisResult, GraphAnalysisResultEdge
 from codeembed.doc_provider.base import DocProviderBase
 from codeembed.doc_splitters.generic_splitter import FileSplitter
 from codeembed.doc_splitters.models import FileSegment
@@ -12,6 +12,7 @@ from codeembed.graph_db.base import GraphDbBase
 from codeembed.graph_db.models import Edge
 from codeembed.llm.base import LLMServiceBase
 from codeembed.llm.models import ChatMessage
+from codeembed.locks.file_lock import FileLock
 from codeembed.vector_db.base import VectorDbBase
 from codeembed.vector_db.models import Chunk
 
@@ -72,18 +73,8 @@ This <segment type> is ...
     return result.response
 
 
-class _Edge(BaseModel):
-    source: str
-    relation: str
-    target: str
-
-
-class _GraphOutput(BaseModel):
-    edges: List[_Edge]  # source, relation, target
-
-
-def _normalize_edge(edge: _Edge) -> _Edge:
-    return _Edge(
+def _normalize_edge(edge: GraphAnalysisResultEdge) -> GraphAnalysisResultEdge:
+    return GraphAnalysisResultEdge(
         source=edge.source.strip(),
         relation=edge.relation.strip().upper().replace(" ", "_"),
         target=edge.target.strip(),
@@ -97,7 +88,7 @@ def _find_graph_relations_with_llm(
     file_path: str,
     llm_model: str,
     summary: str,
-) -> List[_Edge]:
+) -> List[GraphAnalysisResultEdge]:
 
     logger.info(
         "Extracting graph relations for segment %s in file %s:%d-%d...",
@@ -177,7 +168,7 @@ Return STRICT JSON:
         result = llm_service.generate_structured_output(
             messages=messages,
             llm_model=llm_model,
-            output_format=_GraphOutput,
+            output_format=GraphAnalysisResult,
             max_tokens=4096,
             temperature=0.1,
         )
@@ -205,6 +196,7 @@ class DocEmbedder:
         llm_service: LLMServiceBase,
         llm_model: str,
         debounce_seconds: int = 10,
+        chunk_cache: Optional[ChunkCache] = None,
     ) -> None:
         self._doc_provider = doc_provider
         self._vector_db = vector_db
@@ -212,92 +204,122 @@ class DocEmbedder:
         self._llm_service = llm_service
         self._llm_model = llm_model
         self._debounce_seconds = debounce_seconds
+        self._chunk_cache = chunk_cache
 
     def embed_codebase(self) -> None:
         """Embeds the codebase and prepares it for vector search."""
 
         logger.info("Computing deltas...")
 
-        chunks_ids_to_remove, files_to_update, file_paths_to_delete = DeltaComputer(
+        file_path_to_chunk_ids, files_to_update, file_paths_to_delete = DeltaComputer(
             self._doc_provider, self._vector_db, self._debounce_seconds
         ).compute_deltas()
 
-        if chunks_ids_to_remove:
-            logger.info(f"Deleting {len(chunks_ids_to_remove)} chunks from vector database.")
-            self._vector_db.delete_chunks(list(chunks_ids_to_remove))
-
-        for file_path in files_to_update | file_paths_to_delete:
-            logger.info(f"Deleting edges for file '{file_path}' from graph database.")
+        # Handle deletions of removed files (no lock needed — the file is gone).
+        for file_path in file_paths_to_delete:
+            chunk_ids = file_path_to_chunk_ids.get(file_path, [])
+            if chunk_ids:
+                logger.info(f"Deleting {len(chunk_ids)} chunks for removed file '{file_path}'.")
+                self._vector_db.delete_chunks(chunk_ids)
+            logger.info(f"Deleting edges for removed file '{file_path}'.")
             self._graph_db.delete_edges_by_file_path(file_path)
 
         if not files_to_update:
             logger.info("No files to update. Embedding process is complete.")
             return
 
-        logger.info(f"Processing {len(files_to_update)} files...")
+        logger.info(f"Processing up to {len(files_to_update)} files...")
 
         num_processed = 0
         num_skipped = 0
 
         splitter = FileSplitter()
 
-        # TODO: Add multi-threading.
+        # TODO: Add multi-threading (requires SqliteGraphDb thread-safety fix first).
 
         for i, file in enumerate(files_to_update):
-            logger.info(f"Processing file '{file}' ({i + 1}/{len(files_to_update)})...")
-            doc = self._doc_provider.get_content(file)
-            segments = splitter.split_file(doc.content, file)
-            chunks = []
-            edges: List[Edge] = []
-            for segment in segments:
-                summary = _summarize_chunk_with_llm(self._llm_service, segment, doc.content, file, self._llm_model)
-
-                _edges = _find_graph_relations_with_llm(
-                    self._llm_service, segment, doc.content, file, self._llm_model, summary
-                )
-
-                chunk = Chunk(
-                    id=uuid4(),
-                    modified_at=doc.modified_at,
-                    content=summary,
-                    file_path=file,
-                    line_start=segment.line_start,
-                    line_end=segment.line_end,
-                    raw_code=segment.content,
-                    file_sha256_checksum=doc.sha256_checksum,
-                    graph_node_ids=[edge.source for edge in _edges],
-                )
-
-                chunks.append(chunk)
-
-                edges.extend(
-                    [
-                        Edge(
-                            source=edge.source,
-                            relation=edge.relation,
-                            target=edge.target,
-                            file_path=file,
-                            chunk_id=chunk.id,
-                            properties={
-                                "line_start": segment.line_start,
-                                "line_end": segment.line_end,
-                                "modified_at": doc.modified_at.isoformat(),
-                                "file_sha256_checksum": doc.sha256_checksum,
-                            },
-                        )
-                        for edge in _edges
-                    ]
-                )
-            if not chunks:
-                logger.warning(f"No chunks generated for file '{file}'. Skipping embedding for this file.")
-                num_skipped += 1
+            lock = FileLock(file)
+            if not lock.try_acquire():
+                logger.info(f"File '{file}' is being processed by another instance. Skipping.")
                 continue
-            logger.info(f"Saving {len(edges)} edges to graph database.")
-            self._graph_db.add_edges(edges)
-            logger.info(f"Saving {len(chunks)} chunks to vector database.")
-            self._vector_db.add_chunks(chunks)
-            num_processed += 1
-            logger.info(f"Successfully embedded file: '{file}' ({i + 1}/{len(files_to_update)}).")
+
+            try:
+                logger.info(f"Processing file '{file}' ({i + 1}/{len(files_to_update)})...")
+
+                # Delete stale data for this file before writing fresh data.
+                chunk_ids = file_path_to_chunk_ids.get(file, [])
+                if chunk_ids:
+                    logger.info(f"Deleting {len(chunk_ids)} stale chunks for '{file}'.")
+                    self._vector_db.delete_chunks(chunk_ids)
+                self._graph_db.delete_edges_by_file_path(file)
+
+                doc = self._doc_provider.get_content(file)
+                segments = splitter.split_file(doc.content, file)
+                chunks = []
+                edges: List[Edge] = []
+
+                for segment in segments:
+                    cached = self._chunk_cache.lookup(segment.content) if self._chunk_cache else None
+                    if cached:
+                        summary, _edges = cached
+                        logger.info("Cache hit for segment in %s:%d-%d", file, segment.line_start, segment.line_end)
+                    else:
+                        summary = _summarize_chunk_with_llm(
+                            self._llm_service, segment, doc.content, file, self._llm_model
+                        )
+                        _edges = _find_graph_relations_with_llm(
+                            self._llm_service, segment, doc.content, file, self._llm_model, summary
+                        )
+                        if self._chunk_cache:
+                            self._chunk_cache.store(segment.content, summary, _edges)
+
+                    chunk = Chunk(
+                        id=uuid4(),
+                        modified_at=doc.modified_at,
+                        content=summary,
+                        file_path=file,
+                        line_start=segment.line_start,
+                        line_end=segment.line_end,
+                        raw_code=segment.content,
+                        file_sha256_checksum=doc.sha256_checksum,
+                        graph_node_ids=[edge.source for edge in _edges],
+                    )
+
+                    chunks.append(chunk)
+
+                    edges.extend(
+                        [
+                            Edge(
+                                source=edge.source,
+                                relation=edge.relation,
+                                target=edge.target,
+                                file_path=file,
+                                chunk_id=chunk.id,
+                                properties={
+                                    "line_start": segment.line_start,
+                                    "line_end": segment.line_end,
+                                    "modified_at": doc.modified_at.isoformat(),
+                                    "file_sha256_checksum": doc.sha256_checksum,
+                                },
+                            )
+                            for edge in _edges
+                        ]
+                    )
+
+                if not chunks:
+                    logger.warning(f"No chunks generated for file '{file}'. Skipping embedding for this file.")
+                    num_skipped += 1
+                    continue
+
+                logger.info(f"Saving {len(edges)} edges to graph database.")
+                self._graph_db.add_edges(edges)
+                logger.info(f"Saving {len(chunks)} chunks to vector database.")
+                self._vector_db.add_chunks(chunks)
+                num_processed += 1
+                logger.info(f"Successfully embedded file: '{file}' ({i + 1}/{len(files_to_update)}).")
+
+            finally:
+                lock.release()
 
         if num_processed > 0:
             logger.info(f"Successfully embedded {num_processed} files.")
