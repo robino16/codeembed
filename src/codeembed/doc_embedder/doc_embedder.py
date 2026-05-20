@@ -206,8 +206,11 @@ class DocEmbedder:
         self._debounce_seconds = debounce_seconds
         self._chunk_cache = chunk_cache
 
-    def embed_codebase(self) -> None:
-        """Embeds the codebase and prepares it for vector search."""
+    def embed_codebase(self) -> bool:
+        """Embeds the codebase and prepares it for vector search.
+
+        Returns True if any files were processed, False if nothing was dirty.
+        """
 
         logger.info("Computing deltas...")
 
@@ -224,9 +227,12 @@ class DocEmbedder:
             logger.info(f"Deleting edges for removed file '{file_path}'.")
             self._graph_db.delete_edges_by_file_path(file_path)
 
-        if not files_to_update:
+        if not files_to_update and not file_paths_to_delete:
             logger.info("No files to update. Embedding process is complete.")
-            return
+            return False
+
+        if not files_to_update:
+            return bool(file_paths_to_delete)
 
         logger.info(f"Processing up to {len(files_to_update)} files...")
 
@@ -325,3 +331,5 @@ class DocEmbedder:
             logger.info(f"Successfully embedded {num_processed} files.")
         if num_skipped > 0:
             logger.warning(f"Skipped processing {num_skipped} files.")
+
+        return num_processed > 0 or bool(file_paths_to_delete)

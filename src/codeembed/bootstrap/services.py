@@ -233,13 +233,22 @@ async def embed_loop() -> None:
     session = get_session()
     config = get_config()
     while True:
+        had_work = False
         try:
-            await asyncio.to_thread(embedder.embed_codebase)
+            had_work = await asyncio.to_thread(embedder.embed_codebase)
         except Exception:
             logger.exception("Embedding run failed")
         session.save()
-        logger.info(
-            f"Input tokens used: {session.input_tokens}, output tokens used: {session.output_tokens}."
-            f"Sleeping for {config.sleep_interval} seconds..."
-        )
-        await asyncio.sleep(config.sleep_interval)
+        if had_work:
+            # Files were processed — immediately recheck so any changes made during
+            # the run are picked up without waiting for the full sleep interval.
+            logger.info(
+                f"Input tokens used: {session.input_tokens}, output tokens used: {session.output_tokens}."
+                " Rechecking for new changes immediately..."
+            )
+        else:
+            logger.info(
+                f"Input tokens used: {session.input_tokens}, output tokens used: {session.output_tokens}."
+                f" Sleeping for {config.sleep_interval} seconds..."
+            )
+            await asyncio.sleep(config.sleep_interval)
