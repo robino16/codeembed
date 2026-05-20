@@ -1,4 +1,5 @@
-from codeembed.doc_embedder.doc_embedder import GraphAnalysisResultEdge, _normalize_edge
+from codeembed.doc_embedder.doc_embedder import _normalize_edge
+from codeembed.doc_embedder.models import GraphAnalysisResultEdge
 
 
 def test_relation_uppercased():
