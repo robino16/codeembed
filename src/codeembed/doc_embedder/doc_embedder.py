@@ -232,7 +232,7 @@ class DocEmbedder:
             return False
 
         if not files_to_update:
-            return bool(file_paths_to_delete)
+            return True
 
         logger.info(f"Processing up to {len(files_to_update)} files...")
 

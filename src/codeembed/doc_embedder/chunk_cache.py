@@ -1,7 +1,6 @@
 import json
 import logging
 import sqlite3
-from datetime import timezone
 from typing import List, Optional, Tuple
 
 from codeembed.doc_embedder.models import GraphAnalysisResultEdge
@@ -52,6 +51,6 @@ class ChunkCache:
         self._conn.execute(
             "INSERT OR REPLACE INTO chunk_cache "
             "(content_sha256, summary, graph_edges_json, created_at) VALUES (?, ?, ?, ?)",
-            (key, summary, json.dumps([e.model_dump() for e in edges]), utc_now().astimezone(timezone.utc).isoformat()),
+            (key, summary, json.dumps([e.model_dump() for e in edges]), utc_now().isoformat()),
         )
         self._conn.commit()
