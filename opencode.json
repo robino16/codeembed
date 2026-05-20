@@ -3,12 +3,7 @@
   "mcp": {
     "codeembed": {
       "type": "local",
-      "command": [
-        "uv",
-        "run",
-        "codeembed",
-        "serve"
-      ],
+      "command": ["uv", "run", "codeembed", "serve"],
       "enabled": true
     }
   }
