@@ -140,7 +140,7 @@ Set only the endpoint; CodeEmbed will use `DefaultAzureCredential`, which automa
 AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/openai/v1/
 ```
 
-## Add to Claude Code or GitHub Copilot
+## Add to coding agents
 
 `codeembed init` will offer to configure these automatically. If you prefer to do it manually:
 
@@ -176,6 +176,21 @@ And add to `.claude/settings.local.json` to enable and pre-approve the tool:
     "codeembed": {
       "command": "codeembed",
       "args": ["serve"]
+    }
+  }
+}
+```
+
+**CodeEmbed** - add to `opencode.json` (or `opencode.jsonc`):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "codeembed": {
+      "type": "local",
+      "command": ["uv", "run", "codeembed", "serve"],
+      "enabled": true
     }
   }
 }
