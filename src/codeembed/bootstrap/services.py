@@ -7,6 +7,7 @@ from functools import lru_cache
 from codeembed.config.models import CodeEmbedConfig
 from codeembed.cost_tracking.llm_wrapper import LLMServiceWithCostTracking
 from codeembed.cost_tracking.models import Session
+from codeembed.doc_embedder.chunk_cache import ChunkCache
 from codeembed.doc_embedder.doc_embedder import DocEmbedder
 from codeembed.doc_provider.local_doc_provider import LocalDocProvider
 from codeembed.doc_search_service.doc_search_service import DocSearchService
@@ -188,6 +189,11 @@ def _get_llm_service() -> LLMServiceBase:
 
 
 @lru_cache(maxsize=1)
+def get_chunk_cache() -> ChunkCache:
+    return ChunkCache()
+
+
+@lru_cache(maxsize=1)
 def get_session() -> Session:
     return Session()
 
@@ -211,7 +217,13 @@ def get_embedder_service() -> DocEmbedder:
     llm_service = get_llm_service()
     graph_db = get_graph_db()
     embedder = DocEmbedder(
-        doc_provider, vector_db, graph_db, llm_service, llm_model=config.llm_model, debounce_seconds=config.debounce
+        doc_provider,
+        vector_db,
+        graph_db,
+        llm_service,
+        llm_model=config.llm_model,
+        debounce_seconds=config.debounce,
+        chunk_cache=get_chunk_cache(),
     )
     return embedder
 
@@ -221,13 +233,22 @@ async def embed_loop() -> None:
     session = get_session()
     config = get_config()
     while True:
+        had_work = False
         try:
-            await asyncio.to_thread(embedder.embed_codebase)
+            had_work = await asyncio.to_thread(embedder.embed_codebase)
         except Exception:
             logger.exception("Embedding run failed")
         session.save()
-        logger.info(
-            f"Input tokens used: {session.input_tokens}, output tokens used: {session.output_tokens}."
-            f"Sleeping for {config.sleep_interval} seconds..."
-        )
-        await asyncio.sleep(config.sleep_interval)
+        if had_work:
+            # Files were processed — immediately recheck so any changes made during
+            # the run are picked up without waiting for the full sleep interval.
+            logger.info(
+                f"Input tokens used: {session.input_tokens}, output tokens used: {session.output_tokens}."
+                " Rechecking for new changes immediately..."
+            )
+        else:
+            logger.info(
+                f"Input tokens used: {session.input_tokens}, output tokens used: {session.output_tokens}."
+                f" Sleeping for {config.sleep_interval} seconds..."
+            )
+            await asyncio.sleep(config.sleep_interval)
